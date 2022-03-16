@@ -10,7 +10,11 @@
 # python -m pip install grpcio grpcio-tools
 # pip3 install mypy-protobuf
 
-source "env.sh"
+# Relative path to directory containing the Bisq .proto files (the protoc compiler input).
+export PROTO_PATH="proto"
+
+# The destination directory for the generated Python code (he protoc compiler output).
+export PYTHON_PROTO_OUT_PATH="bisq/api"
 
 python3 -m grpc_tools.protoc \
   --proto_path=$PROTO_PATH \
