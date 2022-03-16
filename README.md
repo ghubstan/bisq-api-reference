@@ -7,9 +7,6 @@
 This application script consumes Bisq .proto files (`pb.proto` and `grpc.proto`), and produces
 `index.html.md` -- a [Slate](https://github.com/slatedocs/slate) compatible Markdown file.
 
-_Note:  For Python proto generation to work properly, the .proto files must be copied to the project's proto 
-directory from the remote or local GitHub repo.  They are not versioned in this project repo._
-
 The Markdown file is then manually deployed to a developer's or bisq-network's fork of the
 [Slate repository](https://github.com/slatedocs/slate), where the slate fork transforms it to a single html file
 describing Bisq gRPC API services, with example code.
