@@ -1,16 +1,11 @@
 import configparser
-import sys
 import threading
 from decimal import *
 from pathlib import Path
 from tkinter import *
 
-# Append the events pkg to the system path before importing the sepa_mm_bot.
-# TODO  Is there a better way to do this?
-sys.path.append('events')
-
+import path_config
 import sepa_mm_bot
-
 from events.event_dispatcher import EventDispatcher
 from events.trade_event import TradeEvent
 from logger import log
