@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+group 'bisq'
+version '0.0.1-SNAPSHOT'
+
+dependencies {
+    compileOnly 'javax.annotation:javax.annotation-api:1.2'
+
+    implementation 'net.sf.jopt-simple:jopt-simple:5.0.4'
+    implementation 'commons-io:commons-io:2.11.0'
+    implementation 'com.google.protobuf:protobuf-java:3.12.4'
+    implementation 'org.slf4j:slf4j-api:1.7.30'
+    implementation 'ch.qos.logback:logback-classic:1.1.11'
+    implementation 'ch.qos.logback:logback-core:1.1.11'
+
+    annotationProcessor 'org.projectlombok:lombok:1.18.22'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+    compileOnly 'org.projectlombok:lombok:1.18.22'
+    testCompileOnly 'org.projectlombok:lombok:1.18.22'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+}
+
+test {
+    useJUnitPlatform()
+}

@@ -1,0 +1,1 @@
+# Used internally by CLI;  there is no user CLI command 'getoffercategory'.

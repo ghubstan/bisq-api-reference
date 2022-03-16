@@ -1,0 +1,1 @@
+This directory contains Python examples showing how clients can communicate with a local Bisq API daemon.
