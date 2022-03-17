@@ -39,7 +39,7 @@ public class CodeExamples {
     // TODO  Is hard-coding paths to example source files OK?
     private static final String CLI_EXAMPLES_DIR = "cli-examples";
     private static final String JAVA_EXAMPLES_DIR = "java-examples/src/main/java/rpccalls";
-    private static final String PYTHON_EXAMPLES_DIR = "python-examples/rpccalls";
+    private static final String PYTHON_EXAMPLES_DIR = "python-examples/python_examples/rpccalls";
 
     private static final String START_SHELL_MD = "```shell";
     private static final String START_JAVA_MD = "```java";

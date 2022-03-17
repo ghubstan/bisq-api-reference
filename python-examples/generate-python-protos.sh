@@ -14,7 +14,7 @@
 export PROTO_PATH="proto"
 
 # The destination directory for the generated Python code (he protoc compiler output).
-export PYTHON_PROTO_OUT_PATH="bisq/api"
+export PYTHON_PROTO_OUT_PATH="python_examples/bisqapi"
 
 python3 -m grpc_tools.protoc \
   --proto_path=$PROTO_PATH \
@@ -24,5 +24,5 @@ protoc --proto_path=$PROTO_PATH --python_out=$PYTHON_PROTO_OUT_PATH $PROTO_PATH/
 
 # Hack the internal import statements in the generated python to prepend the `bisq.api` package name.
 # See why Google will not fix this:  https://github.com/protocolbuffers/protobuf/issues/1491
-sed -i 's/import pb_pb2 as pb__pb2/import bisq.api.pb_pb2 as pb__pb2/g' $PYTHON_PROTO_OUT_PATH/grpc_pb2.py
-sed -i 's/import grpc_pb2 as grpc__pb2/import bisq.api.grpc_pb2 as grpc__pb2/g' $PYTHON_PROTO_OUT_PATH/grpc_pb2_grpc.py
+sed -i 's/import pb_pb2 as pb__pb2/import python_examples.bisqapi.pb_pb2 as pb__pb2/g' $PYTHON_PROTO_OUT_PATH/grpc_pb2.py
+sed -i 's/import grpc_pb2 as grpc__pb2/import python_examples.bisqapi.grpc_pb2 as grpc__pb2/g' $PYTHON_PROTO_OUT_PATH/grpc_pb2_grpc.py
