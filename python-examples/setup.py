@@ -7,7 +7,6 @@ setup(
     url='https://bisq-network.github.io/slate/#python-examples',
     license='GNU AFFERO GENERAL PUBLIC LICENSE Version 3',
     setup_requires=['wheel'],
-    # packages=find_packages(include=['rpccalls', 'bots', 'bots.*']),
     packages=find_packages(),
     # package_data={'bots': ['bots/assets/*.png']},
     install_requires=['grpcio', 'grpcio-tools', 'mypy-protobuf', 'python-examples'],
