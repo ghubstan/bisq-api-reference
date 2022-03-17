@@ -73,61 +73,10 @@ Running Python examples requires:
 - Generating protobuf and gRPC service stubs using the `protoc` compiler, with two additional Python protobuf and grpc
   plugins.
 
-Instructions for generating the Bisq API Python stubs follow.
+You can download the Bisq protobuf (.proto) files by running:
 
-### Install python plugins for protoc compiler
+    `proto-downloader/download-bisq-protos.sh`
 
-    `$ python -m pip install grpcio grpcio-tools`</br>
-    `$ pip3 install mypy-protobuf`
+You can build Python .proto stubs, install Python example dependencies, and package the examples by running:
 
-### Download the Bisq .proto files to your Python project
-
-If your Python scripts are located in a directory named  `my-api-scripts`, open a terminal in that directory and
-download the Bisq .proto files to a directory named `my-api-scripts/proto`:
-
-    `$ export PROTO_PATH="proto"`</br>
-    `$ curl -o $PROTO_PATH/pb.proto https://raw.githubusercontent.com/bisq-network/bisq/master/proto/src/main/proto/pb.proto`</br>
-    `$ curl -o $PROTO_PATH/grpc.proto https://raw.githubusercontent.com/bisq-network/bisq/master/proto/src/main/proto/grpc.proto`
-
-### Generate Bisq API gRPC Python stubs
-
-The location of Python code generated from downloaded Bisq .proto files _must_ be `<python-examples-dir>/bisq/api`, or
-this document's example Python scripts will not be able to import them at runtime. Put another way, if your Python
-scripts are in a folder named `my-api-scripts`, the `protoc` compiler must generate Python stubs
-in `my-api-scripts/bisq/api`. Each step of the setup is explained below.
-
-If
-
-- Python scripts are located in  `my-api-scripts`
-- Downloaded Bisq .proto files are located in  `my-api-scripts/proto`
-- A terminal is opened in directory `my-api-scripts`
-
-Generate API Python stubs in `my-api-scripts/bisq/api`, as follows:
-
-    `$ export PROTO_PATH="proto"`</br>
-    `$ export PYTHON_PROTO_OUT_PATH="bisq/api"`</br>
-    </br>
-    `$ python3 -m grpc_tools.protoc \`</br>
-        `--proto_path=$PROTO_PATH \`</br>
-        `--python_out=$PYTHON_PROTO_OUT_PATH \`</br>
-        `--grpc_python_out=$PYTHON_PROTO_OUT_PATH $PROTO_PATH/*.proto`</br>
-    </br>
-    `$ protoc --proto_path=$PROTO_PATH --python_out=$PYTHON_PROTO_OUT_PATH $PROTO_PATH/*.proto`</br>
-    </br>
-    `# Hack two internal import statements in the generated Python code to prepend the bisq.api package name.`</br>
-    `# See why @ https://github.com/protocolbuffers/protobuf/issues/1491`</br>
-    </br>
-    `sed -i 's/import pb_pb2 as pb__pb2/import bisq.api.pb_pb2 as pb__pb2/g' $PYTHON_PROTO_OUT_PATH/grpc_pb2.py`</br>
-    `sed -i 's/import grpc_pb2 as grpc__pb2/import bisq.api.grpc_pb2 as grpc__pb2/g' $PYTHON_PROTO_OUT_PATH/grpc_pb2_grpc.py`
-
-Now you should be able to import the Bisq gRPC API stubs into scripts located in `my-api-scripts`, using the following
-Python import statements:
-
-    `import grpc`</br>
-    `import bisq.api.grpc_pb2 as bisq_messages`</br>
-    `import bisq.api.grpc_pb2_grpc as bisq_service`
-
-### _TODO Simplify these Python example setup sections..._
-
-_if more experienced Python developers can demonstrate an easier, more flexible way of generating protobuf / grpc stubs
-without having to manually hack internal import statements._
+    `python-examples/run-setup.sh`
