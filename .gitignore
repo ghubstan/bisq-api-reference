@@ -34,11 +34,11 @@ proto-downloader/*.iml
 proto-downloader/*.proto
 python-examples/*.iml
 python-examples/myvenv
-python-examples/python_examples/__pycache__
-python-examples/python_examples/bisqapi/__pycache__
-python-examples/python_examples/bisqapi/*.py
-python-examples/python_examples/bots/__pycache__
-python-examples/python_examples/bots/bisq_events/__pycache__
+python-examples/bisq/__pycache__
+python-examples/bisq/api/__pycache__
+python-examples/bisq/api/*.py
+python-examples/bisq/bots/__pycache__
+python-examples/bisq/bots/bisq_events/__pycache__
 python-examples/proto/*
 reference-doc-builder/*.iml
 reference-doc-builder/build
