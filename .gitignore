@@ -29,7 +29,7 @@ cli-examples/*.iml
 java-examples/*.iml
 java-examples/build
 java-examples/.gradle
-java-examples/proto/*.proto
+java-examples/src/main/proto/*.proto
 proto-downloader/*.iml
 proto-downloader/*.proto
 python-examples/*.iml
