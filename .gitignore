@@ -29,7 +29,7 @@ cli-examples/*.iml
 java-examples/*.iml
 java-examples/build
 java-examples/.gradle
-java-examples/src/main/proto/*
+java-examples/proto/*.proto
 proto-downloader/*.iml
 proto-downloader/*.proto
 python-examples/*.iml
@@ -39,7 +39,7 @@ python-examples/bisq/api/__pycache__
 python-examples/bisq/api/*.py
 python-examples/bisq/bots/__pycache__
 python-examples/bisq/bots/bisq_events/__pycache__
-python-examples/proto/*
+python-examples/proto/*.proto
 reference-doc-builder/*.iml
 reference-doc-builder/build
 reference-doc-builder/.gradle
