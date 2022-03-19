@@ -3,10 +3,16 @@
 # This script must be run from this directory.
 
 # Install python3-venv if necessary.
+# For systems using the apt package manager, uncomment the line below, or install the equivalent package for your system.
 # sudo apt install python3-venv
 
-# Install Python setuptools if necessary.
+# Install pip, then Python setuptools if necessary.
 # pip install setuptools
+
+# Download the Bisq protobuf definition files from the Bisq repository.
+cd ../proto-downloader
+./download-bisq-protos.sh
+cd ../python-examples
 
 # Generate gRPC Python protobuf classes.  You can download them from the
 # Bisq repo with the proto-downloader/download-bisq-protos.sh script.
