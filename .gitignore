@@ -40,6 +40,9 @@ python-examples/bisq/api/*.py
 python-examples/bisq/bots/__pycache__
 python-examples/bisq/bots/bisq_events/__pycache__
 python-examples/proto/*.proto
+python-examples/build
+python-examples/.eggs
+python-examples/bisq.egg-info
 reference-doc-builder/*.iml
 reference-doc-builder/build
 reference-doc-builder/.gradle
