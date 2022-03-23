@@ -22,7 +22,7 @@ echo "Generating gRPC Python service stubs..."
 # Set up Python environment in python-examples directory.
 echo "Building Python virtual environment in the python-examples directory..."
 rm -rf myvenv
-python -m venv myvenv
+python3 -m venv myvenv
 source ./myvenv/bin/activate
 
 # Install Python example dependencies.
