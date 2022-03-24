@@ -36,7 +36,8 @@ python-examples/*.iml
 python-examples/myvenv
 python-examples/bisq/__pycache__
 python-examples/bisq/api/__pycache__
-python-examples/bisq/api/*.py
+python-examples/bisq/api/grpc_*.py
+python-examples/bisq/api/pb_*.py
 python-examples/bisq/bots/__pycache__
 python-examples/bisq/bots/bisq_events/__pycache__
 python-examples/proto/*.proto
