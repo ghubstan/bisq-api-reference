@@ -25,6 +25,9 @@ rm -rf myvenv
 python3 -m venv myvenv
 source ./myvenv/bin/activate
 
+# Upgrade myvenv's pip
+python3 -m pip install --upgrade pip
+
 # Install Python example dependencies.
 echo "Installing example code dependencies in virtual environment..."
 pip install -r requirements.txt
