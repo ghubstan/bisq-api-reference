@@ -3,8 +3,17 @@
 # This script must be run from this directory.
 
 # Install python3-venv if necessary.
-# For systems using the apt package manager, uncomment the line below, or install the equivalent package for your system.
+# For systems using the apt package manager, uncomment the line
+# below, or install the equivalent package for your system.
 # sudo apt install python3-venv
+
+# Install python3 tkinter if necessary.
+
+# If using the apt package manager, uncomment line below to install tkinter.
+# sudo apt-get install python3-tk
+
+# If using Mac OS / brew, uncomment line below to install tkinter.
+# brew install python-tk
 
 # Install pip, then Python setuptools if necessary.
 # pip install setuptools
