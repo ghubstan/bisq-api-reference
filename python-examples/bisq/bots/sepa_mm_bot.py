@@ -69,6 +69,14 @@ class SepaMMBot(BisqClient):
         self.close_channel()
         self.is_running = False
 
+    def is_valid_sepa_payment_account_id(self, sepa_payment_account_id):
+        account = self.get_payment_account(sepa_payment_account_id)
+        if account is None:
+            log.error('{0} is not a valid PaymentAccount.id.'.format(sepa_payment_account_id))
+            return False
+        else:
+            return True
+
     def make_market(self, reference_price_margin,
                     target_spread,
                     amount_in_satoshis,

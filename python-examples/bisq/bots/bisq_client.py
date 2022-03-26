@@ -396,5 +396,23 @@ class BisqClient(object):
                     currency_code,
                     payment_details)
 
+    def get_payment_account(self, payment_account_id):
+        try:
+            response = self.payment_accts_stub.GetPaymentAccounts.with_call(
+                bisq_messages.GetPaymentAccountsRequest(),
+                metadata=[('password', self.api_password)])
+            payment_accounts = list(response[0].payment_accounts)
+            if len(payment_accounts):
+                payment_accounts_filter = filter(lambda account: (account.id == payment_account_id), payment_accounts)
+                filtered_accounts = list(payment_accounts_filter)
+                if len(filtered_accounts):
+                    return filtered_accounts[0]
+                else:
+                    return None
+            else:
+                return None
+        except grpc.RpcError as rpc_error:
+            print('gRPC API Exception: %s', rpc_error)
+
     def __str__(self):
         return 'host=' + self.host + ' port=' + self.port + ' api_password=' + '*****'

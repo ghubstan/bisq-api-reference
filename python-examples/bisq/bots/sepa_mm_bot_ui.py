@@ -70,6 +70,12 @@ def start():
 
 
 def start_bot():
+    payment_account_exists = bot.is_valid_sepa_payment_account_id(sepa_payment_account_id)
+    if payment_account_exists is False:
+        window.quit()
+        log.error('Shutting down UI.')
+        return
+
     disable_button(start_button)
     enable_button(stop_button)
     reference_price_margin = Decimal(price_margin_input.get())
