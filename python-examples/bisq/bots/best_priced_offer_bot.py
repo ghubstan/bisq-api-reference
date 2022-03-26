@@ -1,3 +1,4 @@
+import argparse
 import configparser
 import sys
 import threading
@@ -209,5 +210,18 @@ class BestPricedOfferBot(BisqClient):
         return 'BestPricedOfferBot: ' + 'host=' + self.host + ', port=' + str(self.port) + ', api_password=' + '*****'
 
 
-def main(host, port, api_password):
-    BestPricedOfferBot(host, port, api_password).run()
+def parse_args(sysargv):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('host', help='API daemon hostname or IP address')
+    parser.add_argument('port', type=int, help='API daemon listening port')
+    parser.add_argument('api_password', help='API password')
+    return parser.parse_args(sysargv)
+
+
+def main():
+    args = parse_args(sys.argv[1:])
+    BestPricedOfferBot(args.host, args.port, args.api_password).run()
+
+
+if __name__ == '__main__':
+    main()
