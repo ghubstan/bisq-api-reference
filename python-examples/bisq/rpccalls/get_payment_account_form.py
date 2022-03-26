@@ -1,6 +1,5 @@
 import os
 import tempfile
-from builtins import print
 
 import grpc
 
