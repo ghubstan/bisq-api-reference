@@ -1,3 +1,4 @@
+import argparse
 import configparser
 import sys
 import threading
@@ -138,5 +139,18 @@ class BsqSWapMMBot(BisqClient):
         return description
 
 
-def main(host, port, api_password):
-    BsqSWapMMBot(host, port, api_password).run()
+def parse_args(sysargv):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('host', help='API daemon hostname or IP address')
+    parser.add_argument('port', type=int, help='API daemon listening port')
+    parser.add_argument('api_password', help='API password')
+    return parser.parse_args(sysargv)
+
+
+def main():
+    args = parse_args(sys.argv[1:])
+    BsqSWapMMBot(args.host, args.port, args.api_password).run()
+
+
+if __name__ == '__main__':
+    main()
