@@ -23,11 +23,6 @@ cd ../proto-downloader
 ./download-bisq-protos.sh
 cd ../python-examples
 
-# Generate gRPC Python protobuf classes.  You can download them from the
-# Bisq repo with the proto-downloader/download-bisq-protos.sh script.
-echo "Generating gRPC Python service stubs..."
-./generate-python-protos.sh
-
 # Set up Python environment in python-examples directory.
 echo "Building Python virtual environment in the python-examples directory..."
 rm -rf myvenv
@@ -40,6 +35,11 @@ python3 -m pip install --upgrade pip
 # Install Python example dependencies.
 echo "Installing example code dependencies in virtual environment..."
 pip install -r requirements.txt
+
+# Generate gRPC Python protobuf classes.  You can download them from the
+# Bisq repo with the proto-downloader/download-bisq-protos.sh script.
+echo "Generating gRPC Python service stubs..."
+./generate-python-protos.sh
 
 # Install API example packages in myvenv.
 echo "Installing example code packages in virtual environment..."
