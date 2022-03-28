@@ -1,51 +1,32 @@
 # Bisq API Reference Doc Generator
 
-[Produces Bisq API Reference Doc.](https://bisq-network.github.io/slate)
+Generates content for the [Bisq API Reference](https://bisq-network.github.io/slate) site.
 
 ## What is bisq-api-reference?
 
-This application script consumes Bisq .proto files (`pb.proto` and `grpc.proto`), and produces
-`index.html.md` -- a [Slate](https://github.com/slatedocs/slate) compatible Markdown file.
+This project's main purpose is to generate the Markdown text for
+the [API Reference](https://bisq-network.github.io/slate). It also provides a Java and Python workarea for running API
+client example code, and developing new Java and Python clients and bots.
 
-The Markdown file is then manually deployed to a developer's or bisq-network's fork of the
-[Slate repository](https://github.com/slatedocs/slate), where the slate fork transforms it to a single html file
-describing Bisq gRPC API services, with example code.
+It contains four subprojects:
 
-## Usage
+1. [reference-doc-builder](https://github.com/ghubstan/bisq-api-reference/tree/main/reference-doc-builder) -- The Java
+   application that produces the [API Reference](https://bisq-network.github.io/slate) content, from Bisq protobuf
+   definition files.
+2. [cli-examples](https://github.com/ghubstan/bisq-api-reference/tree/main/cli-examples) -- A folder of bash scripts
+   demonstrating how to run API CLI commands. Each script is named for the RPC method call being demonstrated.
+3. [java-examples](https://github.com/ghubstan/bisq-api-reference/tree/main/java-examples) -- A Java project
+   demonstrating how to call the API from Java gRPC clients. Each class in
+   the [bisq.rpccalls](https://github.com/ghubstan/bisq-api-reference/tree/main/java-examples/src/main/java/bisq/rpccalls)
+   package is named for the RPC method call being demonstrated.
+4. [python-examples](https://github.com/ghubstan/bisq-api-reference/tree/main/python-examples) -- A Python3 project
+   demonstrating how to call the API from Python3 gRPC clients. Each class in
+   the  [bisq.rpccalls](https://github.com/ghubstan/bisq-api-reference/tree/main/python-examples/bisq/rpccalls) package
+   is named for the RPC method call being demonstrated. There are also some simple bot examples in
+   the [bisq.bots](https://github.com/ghubstan/bisq-api-reference/tree/main/python-examples/bisq/bots) package.
 
-1. [Fork Slate](https://github.com/slatedocs/slate)
+The RPC method examples are also displayed in the [API Reference](https://bisq-network.github.io/slate). While
+navigating the RPC method links in the reference's table of contents on the left side of the page, they appear in the
+dark, right side of the page. There is also a copy-to-clipboard icon at the top right of each example.
 
-
-2. Run `BisqApiDocMain`:
-
-```asciidoc
-BisqApiDocMain --protosIn=<path-to-bisq-protub-files>/proto 
-            \ --markdownOut=<path-to-slate-home>/source 
-            \ --failOnMissingDocumentation=false
-```
-
-3. Commit changes in your local slate/source file (`index.html.md`) _to your forked slate repo_.
-
-```asciidoc
-git commit -a -m "Update index.html.md"
-```
-
-4. Run slate's `deploy.sh` script
-
-
-5. After a few minutes, see changes on in your forked slate's github pages site. For example,</br>
-   if your `index.html.md` file was deployed to bisq-network, the URL will be
-   https://bisq-network.github.io/slate.
-
-
-## Credits
-
-Credit to [Juntao Han](https://github.com/mstao) for making his [markdown4j](https://github.com/mstao/markdown4j)
-API available for use in this project.  His source code is included in this project, modified in ways to make
-generated markdown blocks compatible with Slate/GitHub style markdown.
-
-Lombok annotations are also replaced by the implementations they would generate if that had worked in my
-gradle development setup.
-
-
-
+More details about the subprojects can be found in each subproject's README.
