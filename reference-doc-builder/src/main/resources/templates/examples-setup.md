@@ -43,7 +43,7 @@ directory (`my-api-app`), and the Bisq .proto files are located in a directory n
 ### Generate Bisq API protobuf stubs using Gradle grpc-java plugin (recommended)
 
 You can generate Java API stubs in a Gradle project using the [protoc-gen-grpc-java](https://github.com/grpc/grpc-java)
-plugin. Try the [build.gradle](https://github.com/ghubstan/bisq-api-reference/blob/main/java-examples/build.gradle)
+plugin. Try the [build.gradle](https://github.com/bisq-network/bisq-api-reference/blob/main/java-examples/build.gradle)
 file used by the project providing the Java examples for this document; it should work for you.
 
 _Note: You can also generate stubs with [protoc-gen-grpc-java](https://github.com/grpc/grpc-java) in maven projects._
