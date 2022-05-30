@@ -2,20 +2,32 @@
 
 # This script must be run from this directory.
 
+####################################################################################
 # Install python3-venv if necessary.
-# For systems using the apt package manager, uncomment the line
-# below, or install the equivalent package for your system.
+####################################################################################
+
+# If using the apt package manager on Ubuntu, uncomment line below to install venv.
 # sudo apt install python3-venv
 
-# Install python3 tkinter if necessary.
+# If using the dnf package manager on Fedora, you should already have venv installed
+# with Python3.
 
-# If using the apt package manager, uncomment line below to install tkinter.
+####################################################################################
+# Install python3 tkinter if necessary.
+####################################################################################
+
+# If using the apt package manager on Ubuntu, uncomment line below to install tkinter.
 # sudo apt-get install python3-tk
 
-# If using Mac OS / brew, uncomment line below to install tkinter.
+# If using the dnf package manager on Fedora, uncomment line below to install tkinter.
+# sudo dnf install python3-tkinter
+
+# If using brew on Mac OS, uncomment line below to install tkinter.
 # brew install python-tk
 
+####################################################################################
 # Install pip, then Python setuptools if necessary.
+####################################################################################
 # pip install setuptools
 
 # Download the Bisq protobuf definition files from the Bisq repository.
@@ -44,3 +56,4 @@ echo "Generating gRPC Python service stubs..."
 # Install API example packages in myvenv.
 echo "Installing example code packages in virtual environment..."
 pip install .
+
