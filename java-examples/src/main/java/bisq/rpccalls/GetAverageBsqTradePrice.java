@@ -7,7 +7,7 @@ import io.grpc.ManagedChannelBuilder;
 import static java.lang.String.format;
 import static java.lang.System.out;
 
-public class GetAverageBsqPrice extends BaseJavaExample {
+public class GetAverageBsqTradePrice extends BaseJavaExample {
 
     public static void main(String[] args) {
         try {
