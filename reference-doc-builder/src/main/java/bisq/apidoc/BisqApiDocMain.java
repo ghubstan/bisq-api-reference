@@ -125,7 +125,7 @@ public class BisqApiDocMain {
 
         OptionSpec<String> protosInOpt = optionParser.accepts("protosIn", "directory path to input protobuf files")
                 .withRequiredArg()
-                .defaultsTo("src/main/resources/proto");
+                .defaultsTo("java-examples/src/main/proto");
         OptionSpec<String> markdownOutOpt = optionParser.accepts("markdownOut", "directory path to output markdown file")
                 .withRequiredArg()
                 .defaultsTo("./");
