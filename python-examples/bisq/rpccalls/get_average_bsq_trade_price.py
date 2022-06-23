@@ -15,7 +15,7 @@ def main():
             bisq_messages.GetAverageBsqTradePriceRequest(days=30),
             metadata=[('password', api_password)])
         price = response[0].price
-        print('Response: ' + '30-day BTC price: ' + price.btc_price + '  30-day USD price: ' + price.usd_pricez)
+        print('Response: ' + '30-day BTC price: ' + price.btc_price + '  30-day USD price: ' + price.usd_price)
     except grpc.RpcError as rpc_error:
         print('gRPC API Exception: %s', rpc_error)
 
