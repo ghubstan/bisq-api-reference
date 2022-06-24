@@ -1,5 +1,7 @@
 plugins {
-    id 'java'
+    // Build a distribution without a Class-Path definition in the distribution's java-examples-X.X.X.jar file.
+    // A bash script will be used to create runnable jars from the Java bot examples in java-examples-X.X.X.jar
+    id 'application'
     id 'com.google.protobuf' version '0.8.16'
 }
 
