@@ -32,6 +32,8 @@ java-examples/*.iml
 java-examples/build
 java-examples/.gradle
 java-examples/src/main/proto/*.proto
+java-examples/scripts/java-examples*
+java-examples/scripts/*.conf
 proto-downloader/*.iml
 proto-downloader/*.proto
 python-examples/*.iml
