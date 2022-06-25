@@ -404,7 +404,7 @@ public class TakeBestPricedOfferToBuyBtc extends AbstractBot {
 
             var filterResultsByLabel = new LinkedHashMap<String, Object>();
             filterResultsByLabel.put("Current Market Price:", currentMarketPrice + " " + currencyCode);
-            filterResultsByLabel.put("Target Price (Max):", targetPrice + " " + currencyCode);
+            filterResultsByLabel.put("Target Price (Min):", targetPrice + " " + currencyCode);
             filterResultsByLabel.put("Offer Price:", offer.getPrice() + " " + currencyCode);
             filterResultsByLabel.put("Offer maker used same payment method?",
                     usesSamePaymentMethod.test(offer, getPaymentAccount()));
