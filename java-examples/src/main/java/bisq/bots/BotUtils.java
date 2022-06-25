@@ -72,7 +72,7 @@ public class BotUtils {
     public static BigDecimal calcTargetPrice(BigDecimal targetMarketPriceMargin,
                                              BigDecimal currentMarketPrice,
                                              String currencyCode) {
-        if (!isZero.test(targetMarketPriceMargin) && targetMarketPriceMargin.precision() <= 2)
+        if (!isZero.test(targetMarketPriceMargin) && targetMarketPriceMargin.precision() < 2)
             throw new IllegalArgumentException(
                     format("Price margin percent literal argument %s is invalid;"
                                     + "  it must have a precision of at least 2 decimal places.",
@@ -133,12 +133,13 @@ public class BotUtils {
         return diff.subtract(factor);
     };
 
+
     /**
-     * Return true if the margin price based offer's market price margin (%) >= minMarketPriceMargin (%).
+     * Return true if the offer's margin based price >= target price.
      */
-    public static final BiPredicate<OfferInfo, BigDecimal> isMarginGEMinMarketPriceMargin =
-            (offer, minMarketPriceMargin) -> offer.getUseMarketBasedPrice()
-                    && offer.getMarketPriceMarginPct() >= minMarketPriceMargin.doubleValue();
+    public static final BiPredicate<OfferInfo, BigDecimal> isMarginBasedPriceGETargetPrice =
+            (offer, targetPrice) -> offer.getUseMarketBasedPrice()
+                    && new BigDecimal(offer.getPrice()).compareTo(targetPrice) >= 0;
 
     /**
      * Return true if the margin price based offer's market price margin (%) <= maxMarketPriceMargin (%).
