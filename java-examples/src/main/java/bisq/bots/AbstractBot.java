@@ -31,6 +31,7 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static bisq.bots.BotUtils.*;
 import static bisq.bots.table.builder.TableType.BSQ_BALANCE_TBL;
@@ -522,6 +523,19 @@ public abstract class AbstractBot {
      */
     protected void printTradesSummary(Category category) {
         var trades = getTrades(category);
+        BotUtils.printTradesSummary(category, trades);
+    }
+
+    /**
+     * Print list of today's trade summaries to stdout.
+     *
+     * @param category category OPEN | CLOSED | FAILED
+     */
+    protected void printTradesSummaryForToday(Category category) {
+        var midnightToday = BotUtils.midnightToday.get();
+        var trades = getTrades(category).stream()
+                .filter(t -> t.getDate() >= midnightToday)
+                .collect(Collectors.toList());
         BotUtils.printTradesSummary(category, trades);
     }
 

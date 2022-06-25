@@ -56,6 +56,17 @@ public class BotUtils {
     public static final Predicate<String> isAltcoin = (currencyCode) -> isBsq.test(currencyCode) || isXmr.test(currencyCode);
 
     /**
+     * Return a timestamp for midnight, today.
+     */
+    public static final Supplier<Long> midnightToday = () -> {
+        Calendar c = new GregorianCalendar();
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
+        return c.getTimeInMillis();
+    };
+
+    /**
      * Return price precision of 8 for altcoin, 4 for fiat.
      */
     public static final Function<String, Integer> toPricePrecision = (currencyCode) ->
