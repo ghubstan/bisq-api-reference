@@ -19,6 +19,7 @@ package bisq.bots;
 
 import bisq.proto.grpc.*;
 import io.grpc.CallCredentials;
+import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,19 +41,13 @@ final class GrpcStubs {
     public final TradesGrpc.TradesBlockingStub tradesService;
     public final WalletsGrpc.WalletsBlockingStub walletsService;
 
+    private final ManagedChannel channel;
+
     public GrpcStubs(String apiHost, int apiPort, String apiPassword) {
         CallCredentials credentials = new PasswordCallCredentials(apiPassword);
 
-        var channel = ManagedChannelBuilder.forAddress(apiHost, apiPort).usePlaintext().build();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                log.info("Shutting down bot's grpc channel.");
-                channel.shutdown().awaitTermination(1, SECONDS);
-                log.info("Bot channel shutdown complete.");
-            } catch (InterruptedException ex) {
-                throw new IllegalStateException(ex);
-            }
-        }));
+        this.channel = ManagedChannelBuilder.forAddress(apiHost, apiPort).usePlaintext().build();
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
 
         this.disputeAgentsService = DisputeAgentsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.helpService = HelpGrpc.newBlockingStub(channel).withCallCredentials(credentials);
@@ -63,5 +58,17 @@ final class GrpcStubs {
         this.shutdownService = ShutdownServerGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.tradesService = TradesGrpc.newBlockingStub(channel).withCallCredentials(credentials);
         this.walletsService = WalletsGrpc.newBlockingStub(channel).withCallCredentials(credentials);
+    }
+
+    public void close() {
+        try {
+            if (!channel.isShutdown()) {
+                log.info("Shutting down bot's grpc channel.");
+                channel.shutdown().awaitTermination(1, SECONDS);
+                log.info("Bot channel shutdown complete.");
+            }
+        } catch (InterruptedException ex) {
+            throw new IllegalStateException(ex);
+        }
     }
 }

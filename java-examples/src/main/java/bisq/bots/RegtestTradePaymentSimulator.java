@@ -116,6 +116,8 @@ public class RegtestTradePaymentSimulator extends AbstractBot {
         sleep(pollingInterval);
         log.info("Trade is completed, printing all closed trades and exiting {}.", this.getClass().getSimpleName());
         printTradesSummary(CLOSED);
+        log.info("Closing {}'s gRPC channel.", this.getClass().getSimpleName());
+        super.grpcStubs.close();
     }
 
     private void waitForTakerDepositTxConfirmation() {
