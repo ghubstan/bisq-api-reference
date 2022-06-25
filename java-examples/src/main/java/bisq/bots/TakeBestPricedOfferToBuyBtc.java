@@ -382,12 +382,19 @@ public class TakeBestPricedOfferToBuyBtc extends AbstractBot {
         }
 
         void printCriteriaSummary() {
-            log.info("Looking for offers to {}, priced at or more than {}% {} the current market price {} {}.",
-                    marketDescription.get(),
-                    minMarketPriceMargin.abs(), // Hide the sign, text explains target price % "above or below".
-                    aboveOrBelowMarketPrice.apply(minMarketPriceMargin),
-                    currentMarketPrice,
-                    isXmr.test(currencyCode) ? "BTC" : currencyCode);
+            if (isZero.test(minMarketPriceMargin)) {
+                log.info("Looking for offers to {}, priced at or higher than the current market price {} {}.",
+                        marketDescription.get(),
+                        currentMarketPrice,
+                        isXmr.test(currencyCode) ? "BTC" : currencyCode);
+            } else {
+                log.info("Looking for offers to {}, priced at or more than {}% {} from the current market price {} {}.",
+                        marketDescription.get(),
+                        minMarketPriceMargin.abs(), // Hide the sign, text explains target price % "above or below".
+                        aboveOrBelowMarketPrice.apply(minMarketPriceMargin),
+                        currentMarketPrice,
+                        isXmr.test(currencyCode) ? "BTC" : currencyCode);
+            }
         }
 
         void printOffersAgainstCriteria(List<OfferInfo> offers) {

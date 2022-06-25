@@ -307,12 +307,19 @@ public class TakeBestPricedOfferToBuyBsq extends AbstractBot {
         }
 
         void printCriteriaSummary() {
-            log.info("Looking for offers to {}, with a fixed-price at or greater than"
-                            + " {}% {} the 30-day average BSQ trade price of {} BTC.",
-                    MARKET_DESCRIPTION,
-                    minMarketPriceMargin.abs(), // Hide the sign, text explains target price % "above or below".
-                    aboveOrBelowMarketPrice.apply(minMarketPriceMargin),
-                    avgBsqPrice);
+            if (isZero.test(minMarketPriceMargin)) {
+                log.info("Looking for offers to {}, with a fixed-price at or greater than"
+                                + " the 30-day average BSQ trade price of {} BTC.",
+                        MARKET_DESCRIPTION,
+                        avgBsqPrice);
+            } else {
+                log.info("Looking for offers to {}, with a fixed-price at or greater than"
+                                + " {}% {} the 30-day average BSQ trade price of {} BTC.",
+                        MARKET_DESCRIPTION,
+                        minMarketPriceMargin.abs(), // Hide the sign, text explains target price % "above or below".
+                        aboveOrBelowMarketPrice.apply(minMarketPriceMargin),
+                        avgBsqPrice);
+            }
         }
 
         void printOffersAgainstCriteria(List<OfferInfo> offers) {
