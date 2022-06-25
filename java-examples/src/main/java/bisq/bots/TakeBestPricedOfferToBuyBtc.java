@@ -209,7 +209,6 @@ public class TakeBestPricedOfferToBuyBtc extends AbstractBot {
                             newTrade.getTradeId(),
                             paymentAccount);
                     tradePaymentSimulator.run();
-                    log.info("Trade payment simulation is complete.  Closing bot channels and shutting down.");
                     printBTCBalances("BTC Balances After Simulated Trade Completion");
                 }
                 numOffersTaken++;
