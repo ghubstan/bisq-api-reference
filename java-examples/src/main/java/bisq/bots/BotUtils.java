@@ -253,7 +253,7 @@ public class BotUtils {
      */
     public static String readWalletPassword(String prompt) {
         String walletPassword;
-        var console = console(); // Returns null in IDE console!
+        var console = console();
         //  System.console() returns null if you do not launch your java application with a real console.
         if (console == null) {
             // Have to read it in a less secure way in the IDE's virtual console.

@@ -237,7 +237,7 @@ class OfferTaker {
                             + "    Shut down the API bot and server, then check the server log."));
         }
     }
-    
+
     /**
      * Wait and block until a new trade is fully initialized, with a trade contract and the user's trade role.
      * <p>

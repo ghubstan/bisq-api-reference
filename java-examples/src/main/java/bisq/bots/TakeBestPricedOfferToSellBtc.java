@@ -330,9 +330,8 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
     public static void main(String[] args) {
         @SuppressWarnings("unused")
         String prompt = "An encrypted wallet must be unlocked before any offer can be taken.\n"
-                + "  Please enter your wallet password:";
-        String walletPassword = "be careful";  // readWalletPassword(prompt);
-        log.info("Your wallet password is {}", walletPassword.isBlank() ? "blank" : walletPassword);
+                + "Please enter your wallet password:";
+        String walletPassword = readWalletPassword(prompt);
         TakeBestPricedOfferToSellBtc bot = new TakeBestPricedOfferToSellBtc(appendWalletPasswordOpt(args, walletPassword));
         bot.run();
     }
