@@ -133,6 +133,7 @@ public class TakeBestPricedOfferToBuyBtc extends AbstractBot {
     public void run() {
         var startTime = new Date().getTime();
         validatePollingInterval(pollingInterval);
+        validateWalletPassword(walletPassword);
         validateTradeFeeCurrencyCode(bisqTradeFeeCurrency);
         validatePaymentAccount(paymentAccount);
         printBotConfiguration();
@@ -329,9 +330,8 @@ public class TakeBestPricedOfferToBuyBtc extends AbstractBot {
     public static void main(String[] args) {
         @SuppressWarnings("unused")
         String prompt = "An encrypted wallet must be unlocked before any offer can be taken.\n"
-                + "  Please enter your wallet password:";
-        String walletPassword = "be careful";  // readWalletPassword(prompt);
-        log.info("Your wallet password is {}", walletPassword.isBlank() ? "blank" : walletPassword);
+                + "Please enter your wallet password:";
+        String walletPassword = readWalletPassword(prompt);
         TakeBestPricedOfferToBuyBtc bot = new TakeBestPricedOfferToBuyBtc(appendWalletPasswordOpt(args, walletPassword));
         bot.run();
     }
@@ -404,7 +404,7 @@ public class TakeBestPricedOfferToBuyBtc extends AbstractBot {
 
             var filterResultsByLabel = new LinkedHashMap<String, Object>();
             filterResultsByLabel.put("Current Market Price:", currentMarketPrice + " " + currencyCode);
-            filterResultsByLabel.put("Target Price (Max):", targetPrice + " " + currencyCode);
+            filterResultsByLabel.put("Target Price (Min):", targetPrice + " " + currencyCode);
             filterResultsByLabel.put("Offer Price:", offer.getPrice() + " " + currencyCode);
             filterResultsByLabel.put("Offer maker used same payment method?",
                     usesSamePaymentMethod.test(offer, getPaymentAccount()));

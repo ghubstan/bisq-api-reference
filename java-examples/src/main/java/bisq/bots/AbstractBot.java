@@ -327,6 +327,27 @@ public abstract class AbstractBot {
     }
 
     /**
+     * Attempt to unlock the wallet for 1 second using the given password, and shut down the bot if the
+     * password check fails for any reason.
+     *
+     * @param walletPassword String API daemon's wallet password
+     */
+    protected void validateWalletPassword(String walletPassword) {
+        try {
+            var request = UnlockWalletRequest.newBuilder()
+                    .setPassword(walletPassword)
+                    .setTimeout(1)
+                    .build();
+            //noinspection ResultOfMethodCallIgnored
+            grpcStubs.walletsService.unlockWallet(request);
+        } catch (StatusRuntimeException grpcException) {
+            log.error("Wallet password check failed.");
+            log.error((toCleanErrorMessage.apply(grpcException)));
+            exit(1);
+        }
+    }
+
+    /**
      * Returns PaymentAccount for given paymentAccountId, else throws an IllegalArgumentException.
      *
      * @param paymentAccountId Unique identifier of the payment account
