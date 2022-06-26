@@ -37,7 +37,7 @@ import static protobuf.OfferDirection.SELL;
 
 /**
  * The TakeBestPricedOfferToSellBtc bot waits for attractively priced SELL BTC offers to appear, takes the offers
- * (up to a maximum of configured {@link #maxTakeOffers}, then shuts down both the API daemon and itself (the bot),
+ * (up to a maximum of configured {@link #maxTakeOffers}), then shuts down both the API daemon and itself (the bot),
  * to allow the user to start the desktop UI application and complete the trades.
  * <p>
  * The benefit this bot provides is freeing up the user time spent watching the offer book in the UI, waiting for the
@@ -382,12 +382,19 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
         }
 
         void printCriteriaSummary() {
-            log.info("Looking for offers to {}, priced at or less than {}% {} the current market price {} {}.",
-                    marketDescription.get(),
-                    maxMarketPriceMargin.abs(), // Hide the sign, text explains target price % "above or below".
-                    aboveOrBelowMarketPrice.apply(maxMarketPriceMargin),
-                    currentMarketPrice,
-                    isXmr.test(currencyCode) ? "BTC" : currencyCode);
+            if (isZero.test(maxMarketPriceMargin)) {
+                log.info("Looking for offers to {}, priced at or lower than the current market price {} {}.",
+                        marketDescription.get(),
+                        currentMarketPrice,
+                        isXmr.test(currencyCode) ? "BTC" : currencyCode);
+            } else {
+                log.info("Looking for offers to {}, priced at or less than {}% {} the current market price {} {}.",
+                        marketDescription.get(),
+                        maxMarketPriceMargin.abs(), // Hide the sign, text explains target price % "above or below".
+                        aboveOrBelowMarketPrice.apply(maxMarketPriceMargin),
+                        currentMarketPrice,
+                        isXmr.test(currencyCode) ? "BTC" : currencyCode);
+            }
         }
 
         void printOffersAgainstCriteria(List<OfferInfo> offers) {

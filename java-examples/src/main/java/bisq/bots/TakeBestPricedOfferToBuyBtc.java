@@ -37,7 +37,7 @@ import static protobuf.OfferDirection.SELL;
 
 /**
  * The TakeBestPricedOfferToBuyBtc bot waits for attractively priced BUY BTC offers to appear, takes the offers
- * (up to a maximum of configured {@link #maxTakeOffers}, then shuts down both the API daemon and itself (the bot),
+ * (up to a maximum of configured {@link #maxTakeOffers}), then shuts down both the API daemon and itself (the bot),
  * to allow the user to start the desktop UI application and complete the trades.
  * <p>
  * The benefit this bot provides is freeing up the user time spent watching the offer book in the UI, waiting for the
@@ -368,26 +368,33 @@ public class TakeBestPricedOfferToBuyBtc extends AbstractBot {
                 return offers.stream()
                         .filter(o -> usesSamePaymentMethod.test(o, getPaymentAccount()))
                         .filter(isMakerPreferredTradingPeer)
-                        .filter(o -> isMarginGEMinMarketPriceMargin.test(o, minMarketPriceMargin)
+                        .filter(o -> isMarginBasedPriceGETargetPrice.test(o, targetPrice)
                                 || isFixedPriceGEMinMarketPriceMargin.test(o, currentMarketPrice))
                         .filter(isWithinBTCAmountBounds)
                         .findFirst();
             else
                 return offers.stream()
                         .filter(o -> usesSamePaymentMethod.test(o, getPaymentAccount()))
-                        .filter(o -> isMarginGEMinMarketPriceMargin.test(o, minMarketPriceMargin)
+                        .filter(o -> isMarginBasedPriceGETargetPrice.test(o, targetPrice)
                                 || isFixedPriceGEMinMarketPriceMargin.test(o, currentMarketPrice))
                         .filter(isWithinBTCAmountBounds)
                         .findFirst();
         }
 
         void printCriteriaSummary() {
-            log.info("Looking for offers to {}, priced at or more than {}% {} the current market price {} {}.",
-                    marketDescription.get(),
-                    minMarketPriceMargin.abs(), // Hide the sign, text explains target price % "above or below".
-                    aboveOrBelowMarketPrice.apply(minMarketPriceMargin),
-                    currentMarketPrice,
-                    isXmr.test(currencyCode) ? "BTC" : currencyCode);
+            if (isZero.test(minMarketPriceMargin)) {
+                log.info("Looking for offers to {}, priced at or higher than the current market price {} {}.",
+                        marketDescription.get(),
+                        currentMarketPrice,
+                        isXmr.test(currencyCode) ? "BTC" : currencyCode);
+            } else {
+                log.info("Looking for offers to {}, priced at or more than {}% {} the current market price {} {}.",
+                        marketDescription.get(),
+                        minMarketPriceMargin.abs(), // Hide the sign, text explains target price % "above or below".
+                        aboveOrBelowMarketPrice.apply(minMarketPriceMargin),
+                        currentMarketPrice,
+                        isXmr.test(currencyCode) ? "BTC" : currencyCode);
+            }
         }
 
         void printOffersAgainstCriteria(List<OfferInfo> offers) {
@@ -412,12 +419,12 @@ public class TakeBestPricedOfferToBuyBtc extends AbstractBot {
                     iHavePreferredTradingPeers.get()
                             ? isMakerPreferredTradingPeer.test(offer) ? "YES" : "NO"
                             : "N/A");
-            var marginPriceLabel = format("Is offer's price margin (%s%%) >= bot's min market price margin (%s%%)?",
-                    offer.getMarketPriceMarginPct(),
-                    minMarketPriceMargin);
+            var marginPriceLabel = format("Is offer's margin based price (%s) >= bot's target price (%s)?",
+                    offer.getUseMarketBasedPrice() ? offer.getPrice() : "N/A",
+                    offer.getUseMarketBasedPrice() ? targetPrice : "N/A");
             filterResultsByLabel.put(marginPriceLabel,
                     offer.getUseMarketBasedPrice()
-                            ? isMarginGEMinMarketPriceMargin.test(offer, minMarketPriceMargin)
+                            ? isMarginBasedPriceGETargetPrice.test(offer, targetPrice)
                             : "N/A");
             var fixedPriceLabel = format("Is offer's fixed-price (%s) >= bot's target price (%s)?",
                     offer.getUseMarketBasedPrice() ? "N/A" : offer.getPrice() + " " + currencyCode,
