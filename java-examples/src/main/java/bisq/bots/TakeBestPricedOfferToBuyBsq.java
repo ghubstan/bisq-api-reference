@@ -169,9 +169,9 @@ public class TakeBestPricedOfferToBuyBsq extends AbstractBot {
 
     private void printBotConfiguration() {
         var configsByLabel = new LinkedHashMap<String, Object>();
-        configsByLabel.put("Bot OS:", getOSName() + " " + getOSVersion());
+        configsByLabel.put("Bot OS:", "\t" + getOSName() + " " + getOSVersion());
         var network = getNetwork();
-        configsByLabel.put("BTC Network:", network);
+        configsByLabel.put("BTC Network:", "\t" + network);
         var isMainnet = network.equalsIgnoreCase("mainnet");
         var mainnet30DayAvgBsqPrice = isMainnet ? get30DayAvgBsqPriceInBtc() : null;
         configsByLabel.put("My Payment Account:", "");
@@ -194,7 +194,7 @@ public class TakeBestPricedOfferToBuyBsq extends AbstractBot {
         } else {
             configsByLabel.put("\tPreferred Trading Peers:", "N/A");
         }
-        configsByLabel.put("Bot Polling Interval:", pollingInterval + " ms");
+        configsByLabel.put("Bot Polling Interval:", "\t" + pollingInterval + " ms");
         log.info(toTable.apply("Bot Configuration", configsByLabel));
     }
 

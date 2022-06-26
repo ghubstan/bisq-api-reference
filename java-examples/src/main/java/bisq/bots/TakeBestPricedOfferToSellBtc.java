@@ -209,7 +209,6 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
                             newTrade.getTradeId(),
                             paymentAccount);
                     tradePaymentSimulator.run();
-                    log.info("Trade payment simulation is complete.  Closing bot channels and shutting down.");
                     printBTCBalances("BTC Balances After Simulated Trade Completion");
                 }
                 numOffersTaken++;
@@ -261,7 +260,9 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
             isShutdown = true;
 
             if (canSimulatePaymentSteps) {
-                log.info("Shutting down bot after successful trade completion.  API daemon will not be shut down.");
+                log.info("Shutting down bot after {} successful simulated trades."
+                                + "  API daemon will not be shut down.",
+                        numOffersTaken);
                 sleep(2_000);
             } else {
                 log.info("Shutting down API daemon and bot after taking {} offers."
@@ -305,9 +306,9 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
 
     private void printBotConfiguration() {
         var configsByLabel = new LinkedHashMap<String, Object>();
-        configsByLabel.put("Bot OS:", getOSName() + " " + getOSVersion());
+        configsByLabel.put("Bot OS:", "\t" + getOSName() + " " + getOSVersion());
         var network = getNetwork();
-        configsByLabel.put("BTC Network:", network);
+        configsByLabel.put("BTC Network:", "\t" + network);
         configsByLabel.put("My Payment Account:", "");
         configsByLabel.put("\tPayment Account Id:", paymentAccount.getId());
         configsByLabel.put("\tAccount Name:", paymentAccount.getAccountName());
@@ -323,7 +324,7 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
         } else {
             configsByLabel.put("\tPreferred Trading Peers:", "N/A");
         }
-        configsByLabel.put("Bot Polling Interval:", pollingInterval + " ms");
+        configsByLabel.put("Bot Polling Interval:", "\t" + pollingInterval + " ms");
         log.info(toTable.apply("Bot Configuration", configsByLabel));
     }
 

@@ -114,8 +114,9 @@ public class RegtestTradePaymentSimulator extends AbstractBot {
         log.warn("##############################################################################");
 
         sleep(pollingInterval);
-        log.info("Trade is completed, printing all closed trades and exiting {}.", this.getClass().getSimpleName());
-        printTradesSummary(CLOSED);
+        log.info("Trade is completed.  Here are today's completed trades:");
+        printTradesSummaryForToday(CLOSED);
+
         log.info("Closing {}'s gRPC channel.", this.getClass().getSimpleName());
         super.grpcStubs.close();
     }
@@ -166,7 +167,7 @@ public class RegtestTradePaymentSimulator extends AbstractBot {
     }
 
     private void sendPaymentReceivedConfirmationMessage() {
-        log.info("You confirm {} payment was received to you wallet before"
+        log.info("You confirm {} payment was received to your wallet before"
                         + " sending confirmpaymentreceived to the BTC buyer.",
                 currencyCode);
         sleep(pollingInterval);
