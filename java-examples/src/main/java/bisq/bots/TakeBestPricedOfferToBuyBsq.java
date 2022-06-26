@@ -28,6 +28,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 import static bisq.bots.BotUtils.*;
+import static bisq.proto.grpc.GetTradesRequest.Category.CLOSED;
 import static java.lang.String.format;
 import static java.lang.System.exit;
 import static java.math.RoundingMode.HALF_UP;
@@ -227,6 +228,9 @@ public class TakeBestPricedOfferToBuyBsq extends AbstractBot {
      * Lock the wallet, stop the API daemon, and terminate the bot.
      */
     private void maybeShutdownAfterSuccessfulSwap() {
+        log.info("Here are today's completed trades:");
+        printTradesSummaryForToday(CLOSED);
+
         if (!isDryRun) {
             try {
                 lockWallet();

@@ -416,7 +416,6 @@ public class BotUtils {
      * @param trades   list of trades
      */
     public static void printTradesSummary(GetTradesRequest.Category category, List<TradeInfo> trades) {
-        log.info("{} trades:", category.name());
         switch (category) {
             case CLOSED -> new TableBuilder(CLOSED_TRADES_TBL, trades).build().print(out);
             case FAILED -> new TableBuilder(FAILED_TRADES_TBL, trades).build().print(out);
