@@ -132,8 +132,8 @@ public class TakeBestPricedOfferToBuyBtc extends AbstractBot {
     @Override
     public void run() {
         var startTime = new Date().getTime();
-        validatePollingInterval(pollingInterval);
         validateWalletPassword(walletPassword);
+        validatePollingInterval(pollingInterval);
         validateTradeFeeCurrencyCode(bisqTradeFeeCurrency);
         validatePaymentAccount(paymentAccount);
         printBotConfiguration();
@@ -306,9 +306,9 @@ public class TakeBestPricedOfferToBuyBtc extends AbstractBot {
 
     private void printBotConfiguration() {
         var configsByLabel = new LinkedHashMap<String, Object>();
-        configsByLabel.put("Bot OS:", "\t" + getOSName() + " " + getOSVersion());
+        configsByLabel.put("Bot OS:", getOSName() + " " + getOSVersion());
         var network = getNetwork();
-        configsByLabel.put("BTC Network:", "\t" + network);
+        configsByLabel.put("BTC Network:", network);
         configsByLabel.put("My Payment Account:", "");
         configsByLabel.put("\tPayment Account Id:", paymentAccount.getId());
         configsByLabel.put("\tAccount Name:", paymentAccount.getAccountName());
@@ -324,16 +324,12 @@ public class TakeBestPricedOfferToBuyBtc extends AbstractBot {
         } else {
             configsByLabel.put("\tPreferred Trading Peers:", "N/A");
         }
-        configsByLabel.put("Bot Polling Interval:", "\t" + pollingInterval + " ms");
+        configsByLabel.put("Bot Polling Interval:", pollingInterval + " ms");
         log.info(toTable.apply("Bot Configuration", configsByLabel));
     }
 
     public static void main(String[] args) {
-        @SuppressWarnings("unused")
-        String prompt = "An encrypted wallet must be unlocked before any offer can be taken.\n"
-                + "Please enter your wallet password:";
-        String walletPassword = readWalletPassword(prompt);
-        TakeBestPricedOfferToBuyBtc bot = new TakeBestPricedOfferToBuyBtc(appendWalletPasswordOpt(args, walletPassword));
+        TakeBestPricedOfferToBuyBtc bot = new TakeBestPricedOfferToBuyBtc(args);
         bot.run();
     }
 
