@@ -93,6 +93,7 @@ public class TakeBestPricedOfferToBuyBsq extends AbstractBot {
     @Override
     public void run() {
         var startTime = new Date().getTime();
+        validateWalletPassword(walletPassword);
         validatePollingInterval(pollingInterval);
         printBotConfiguration();
 
@@ -169,9 +170,9 @@ public class TakeBestPricedOfferToBuyBsq extends AbstractBot {
 
     private void printBotConfiguration() {
         var configsByLabel = new LinkedHashMap<String, Object>();
-        configsByLabel.put("Bot OS:", "\t" + getOSName() + " " + getOSVersion());
+        configsByLabel.put("Bot OS:", getOSName() + " " + getOSVersion());
         var network = getNetwork();
-        configsByLabel.put("BTC Network:", "\t" + network);
+        configsByLabel.put("BTC Network:", network);
         var isMainnet = network.equalsIgnoreCase("mainnet");
         var mainnet30DayAvgBsqPrice = isMainnet ? get30DayAvgBsqPriceInBtc() : null;
         configsByLabel.put("My Payment Account:", "");
@@ -194,7 +195,7 @@ public class TakeBestPricedOfferToBuyBsq extends AbstractBot {
         } else {
             configsByLabel.put("\tPreferred Trading Peers:", "N/A");
         }
-        configsByLabel.put("Bot Polling Interval:", "\t" + pollingInterval + " ms");
+        configsByLabel.put("Bot Polling Interval:", pollingInterval + " ms");
         log.info(toTable.apply("Bot Configuration", configsByLabel));
     }
 
@@ -260,11 +261,7 @@ public class TakeBestPricedOfferToBuyBsq extends AbstractBot {
             BotUtils.isWithinBTCAmountBounds(offer, getMinAmount(), getMaxAmount());
 
     public static void main(String[] args) {
-        @SuppressWarnings("unused")
-        String prompt = "An encrypted wallet must be unlocked before any offer can be taken.\n"
-                + "Please enter your wallet password:";
-        String walletPassword = readWalletPassword(prompt);
-        TakeBestPricedOfferToBuyBsq bot = new TakeBestPricedOfferToBuyBsq(appendWalletPasswordOpt(args, walletPassword));
+        TakeBestPricedOfferToBuyBsq bot = new TakeBestPricedOfferToBuyBsq(args);
         bot.run();
     }
 

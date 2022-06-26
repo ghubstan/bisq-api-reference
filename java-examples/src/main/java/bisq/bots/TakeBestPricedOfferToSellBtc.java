@@ -133,6 +133,7 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
     @Override
     public void run() {
         var startTime = new Date().getTime();
+        validateWalletPassword(walletPassword);
         validatePollingInterval(pollingInterval);
         validateTradeFeeCurrencyCode(bisqTradeFeeCurrency);
         validatePaymentAccount(paymentAccount);
@@ -306,9 +307,9 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
 
     private void printBotConfiguration() {
         var configsByLabel = new LinkedHashMap<String, Object>();
-        configsByLabel.put("Bot OS:", "\t" + getOSName() + " " + getOSVersion());
+        configsByLabel.put("Bot OS:", getOSName() + " " + getOSVersion());
         var network = getNetwork();
-        configsByLabel.put("BTC Network:", "\t" + network);
+        configsByLabel.put("BTC Network:", network);
         configsByLabel.put("My Payment Account:", "");
         configsByLabel.put("\tPayment Account Id:", paymentAccount.getId());
         configsByLabel.put("\tAccount Name:", paymentAccount.getAccountName());
@@ -324,16 +325,12 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
         } else {
             configsByLabel.put("\tPreferred Trading Peers:", "N/A");
         }
-        configsByLabel.put("Bot Polling Interval:", "\t" + pollingInterval + " ms");
+        configsByLabel.put("Bot Polling Interval:", pollingInterval + " ms");
         log.info(toTable.apply("Bot Configuration", configsByLabel));
     }
 
     public static void main(String[] args) {
-        @SuppressWarnings("unused")
-        String prompt = "An encrypted wallet must be unlocked before any offer can be taken.\n"
-                + "Please enter your wallet password:";
-        String walletPassword = readWalletPassword(prompt);
-        TakeBestPricedOfferToSellBtc bot = new TakeBestPricedOfferToSellBtc(appendWalletPasswordOpt(args, walletPassword));
+        TakeBestPricedOfferToSellBtc bot = new TakeBestPricedOfferToSellBtc(args);
         bot.run();
     }
 

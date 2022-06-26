@@ -84,8 +84,8 @@ public abstract class AbstractBot {
 
     // Constructor
     public AbstractBot(String[] args) {
-        this.args = args;
-        Config bisqClientOpts = new Config(args, defaultPropertiesFilename.get());
+        this.args = toArgsWithWalletPassword.apply(args);
+        Config bisqClientOpts = new Config(this.args, defaultPropertiesFilename.get());
         this.walletPassword = bisqClientOpts.getWalletPassword();
         this.conf = bisqClientOpts.getConf();
         this.grpcStubs = new GrpcStubs(bisqClientOpts.getHost(), bisqClientOpts.getPort(), bisqClientOpts.getPassword());

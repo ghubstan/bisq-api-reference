@@ -257,6 +257,19 @@ public class BotUtils {
     }
 
     /**
+     * Reads a wallet password from the console, and appends it to the given program args
+     * array as an additional config option, e.g.,  --wallet-password="be careful".
+     * The returned String[] is the original args array, plus the wallet-password option.
+     */
+    public static final Function<String[], String[]> toArgsWithWalletPassword = (args) -> {
+        var walletPasswordPrompt = "An encrypted wallet must be unlocked"
+                + " for requests that read or update your wallet.\n"
+                + "Please enter your wallet password:";
+        var unvalidatedWalletPassword = readWalletPassword(walletPasswordPrompt);
+        return appendWalletPasswordOpt(args, unvalidatedWalletPassword);
+    };
+
+    /**
      * Return a wallet password read from stdin.  If read from a command terminal, input will not be echoed.
      * If run in a virtual terminal (IDE console), the input will be echoed.
      *
@@ -284,7 +297,7 @@ public class BotUtils {
     }
 
     /**
-     * Return the given String[] args with an additional --wallet-password=xyz option appended to it.
+     * Return the given String[] args with an additional --wallet-password="be careful" option appended to it.
      *
      * @param args           program arguments
      * @param walletPassword wallet password
