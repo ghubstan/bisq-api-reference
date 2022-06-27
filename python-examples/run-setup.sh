@@ -2,6 +2,10 @@
 
 # This script must be run from this directory.
 
+# Get the script directory (relative to the current directory), cd into the directory, use pwd to get the absolute path.
+export SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+cd "$SCRIPT_DIR"
+
 ####################################################################################
 # Install python3-venv if necessary.
 ####################################################################################
