@@ -153,6 +153,13 @@ public class BotUtils {
                     && new BigDecimal(offer.getPrice()).compareTo(targetPrice) >= 0;
 
     /**
+     * Return true if the margin price based offer's market price margin (%) >= minxMarketPriceMargin (%).
+     */
+    public static final BiPredicate<OfferInfo, BigDecimal> isMarginGEMinMarketPriceMargin =
+            (offer, minMarketPriceMargin) -> offer.getUseMarketBasedPrice()
+                    && offer.getMarketPriceMarginPct() >= minMarketPriceMargin.doubleValue();
+
+    /**
      * Return true if the margin price based offer's market price margin (%) <= maxMarketPriceMargin (%).
      */
     public static final BiPredicate<OfferInfo, BigDecimal> isMarginLEMaxMarketPriceMargin =
@@ -198,9 +205,15 @@ public class BotUtils {
     }
 
     /**
+     * Return String "above" if minMarketPriceMargin (%) >= 0.00, else "below".
+     */
+    public static final Function<BigDecimal, String> aboveOrBelowMinMarketPriceMargin = (minMarketPriceMargin) ->
+            minMarketPriceMargin.compareTo(ZERO) >= 0 ? "above" : "below";
+
+    /**
      * Return String "below" if maxMarketPriceMargin (%) <= 0.00, else "above".
      */
-    public static final Function<BigDecimal, String> aboveOrBelowMarketPrice = (maxMarketPriceMargin) ->
+    public static final Function<BigDecimal, String> aboveOrBelowMaxMarketPriceMargin = (maxMarketPriceMargin) ->
             maxMarketPriceMargin.compareTo(ZERO) <= 0 ? "below" : "above";
 
     /**
@@ -268,6 +281,12 @@ public class BotUtils {
         var unvalidatedWalletPassword = readWalletPassword(walletPasswordPrompt);
         return appendWalletPasswordOpt(args, unvalidatedWalletPassword);
     };
+
+    /**
+     * Return true if the '--wallet-password' option label if found in the given program args array.
+     */
+    public static final Predicate<String[]> hasWalletPasswordOpt = (args) ->
+            Arrays.stream(args).anyMatch(a -> a.contains("--wallet-password"));
 
     /**
      * Return a wallet password read from stdin.  If read from a command terminal, input will not be echoed.

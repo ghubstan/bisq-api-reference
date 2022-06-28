@@ -20,6 +20,7 @@ import bisq.bots.table.builder.TableBuilder;
 import bisq.proto.grpc.*;
 import bisq.proto.grpc.GetTradesRequest.Category;
 import io.grpc.StatusRuntimeException;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import protobuf.PaymentAccount;
@@ -37,6 +38,7 @@ import static bisq.bots.BotUtils.*;
 import static bisq.bots.table.builder.TableType.BSQ_BALANCE_TBL;
 import static bisq.bots.table.builder.TableType.BTC_BALANCE_TBL;
 import static bisq.proto.grpc.GetOfferCategoryReply.OfferCategory.BSQ_SWAP;
+import static bisq.proto.grpc.GetTradesRequest.Category.CLOSED;
 import static io.grpc.Status.*;
 import static java.lang.String.format;
 import static java.lang.System.exit;
@@ -61,6 +63,7 @@ public abstract class AbstractBot {
     protected final String walletPassword;
     protected final String conf;
     protected final GrpcStubs grpcStubs;
+    @Getter
     protected final boolean isDryRun;
     // This is an experimental option for simulating and automating protocol payment steps during bot development.
     // Be extremely careful in its use;  You do not want to "simulate" payments when API daemon is connected to mainnet.
@@ -71,8 +74,8 @@ public abstract class AbstractBot {
     protected final List<String> preferredTradingPeers = new ArrayList<>();
 
     // Used during dry runs to track offers that would be taken.
-    // This list should remain empty if super.dryRun = FALSE until bot can take multiple offers in one session.
-    protected final List<OfferInfo> offersTaken = new ArrayList<>();
+    // This list should stay empty when dryRun = false.
+    protected final List<OfferInfo> offersTakenDuringDryRun = new ArrayList<>();
 
     protected final boolean canUseBash = getBashPath().isPresent();
     protected boolean isShutdown = false;
@@ -82,9 +85,20 @@ public abstract class AbstractBot {
     protected final Supplier<Long> minimumTxFeeRate = () -> txFeeRates.get().getMinFeeServiceRate();
     protected final Supplier<Long> mostRecentTxFeeRate = () -> txFeeRates.get().getFeeServiceRate();
 
-    // Constructor
+    /**
+     * Constructor that optionally prompts user to enter wallet password in the console.
+     * <p>
+     * The wallet password prompt will be skipped if the given program args array already contains the
+     * '--wallet-password' option.  This situation can occur when a bot calls another bot, and passes its
+     * wallet password option with validated value to this constructor.
+     * <p>
+     *
+     * @param args program arguments
+     */
     public AbstractBot(String[] args) {
-        this.args = toArgsWithWalletPassword.apply(args);
+        this.args = hasWalletPasswordOpt.test(args)
+                ? args
+                : toArgsWithWalletPassword.apply(args);
         Config bisqClientOpts = new Config(this.args, defaultPropertiesFilename.get());
         this.walletPassword = bisqClientOpts.getWalletPassword();
         this.conf = bisqClientOpts.getConf();
@@ -113,7 +127,11 @@ public abstract class AbstractBot {
             var reply = grpcStubs.versionService.getVersion(request);
             log.info("API daemon {} is available.", reply.getVersion());
         } catch (StatusRuntimeException grpcException) {
-            log.error("Fatal Error: {}, daemon not available.  Shutting down bot.", toCleanErrorMessage.apply(grpcException));
+            log.error("Fatal Error: {}, daemon not available.", toCleanErrorMessage.apply(grpcException));
+            if (exceptionHasStatus.test(grpcException, UNAUTHENTICATED)) {
+                log.error("Make sure your bot requests' '--password' opts match the API daemon's '--apiPassword' opt.");
+            }
+            log.error("Shutting down bot.");
             exit(1);
         }
     }
@@ -192,10 +210,10 @@ public abstract class AbstractBot {
     }
 
     /**
-     * Return true if bot has taken the offer during this session -- for dry runs only.
+     * Return true if bot is in dryrun mode, and has taken the offer during this session.
      */
     protected final Predicate<OfferInfo> isAlreadyTaken = (offer) ->
-            offersTaken.stream().anyMatch(o -> o.getId().equals(offer.getId()));
+            this.isDryRun() && offersTakenDuringDryRun.stream().anyMatch(o -> o.getId().equals(offer.getId()));
 
     /**
      * Print a table of BSQ balance information.
@@ -396,23 +414,54 @@ public abstract class AbstractBot {
      * XMR payment account, else throws an IllegalStateException.  (The bot does not yet support BSQ Swaps.)
      */
     protected void validatePaymentAccount(PaymentAccount paymentAccount) {
+        verifyPaymentAccountCurrencyIsSupported(paymentAccount);
+    }
+
+    /**
+     * Verifies (1) the given PaymentAccount has a selected trade currency, (2) is a fiat or XMR payment account,
+     * and (3) the payment account's primary (selected) currency code matches the given currency code, else throws
+     * an IllegalStateException.
+     */
+    protected void validatePaymentAccount(PaymentAccount paymentAccount, String currencyCode) {
+        verifyPaymentAccountCurrencyIsSupported(paymentAccount);
+        var selectedCurrencyCode = paymentAccount.getSelectedTradeCurrency().getCode();
+        if (!selectedCurrencyCode.equalsIgnoreCase(currencyCode))
+            throw new IllegalStateException(
+                    format("The bot's configured paymentAccountId %s%n"
+                                    + "is the id for '%s', which was set up to trade %s, not %s.",
+                            paymentAccount.getId(),
+                            paymentAccount.getAccountName(),
+                            selectedCurrencyCode,
+                            currencyCode));
+    }
+
+    /**
+     * Throw an IllegalStateException if (1) the given payment account has no selected trade currency,
+     * or (2) the payment account's selected trade currency is not supported by this bot, or (3) the
+     * payment account's selected trade currency is BSQ.  (Let the API daemon handle the payment
+     * account used for BSQ swaps.)
+     *
+     * @param paymentAccount the payment account
+     */
+    private void verifyPaymentAccountCurrencyIsSupported(PaymentAccount paymentAccount) {
         if (!paymentAccount.hasSelectedTradeCurrency())
             throw new IllegalStateException(
-                    format("PaymentAccount with ID '%s' and name '%s' has no selected currency definition.",
+                    format("Payment Account with ID '%s' and name '%s' has no selected currency definition.",
                             paymentAccount.getId(),
                             paymentAccount.getAccountName()));
 
         var selectedCurrencyCode = paymentAccount.getSelectedTradeCurrency().getCode();
 
         // Hacky way to find out if this is an altcoin payment method, but there is no BLOCK_CHAINS proto enum or msg.
-        boolean isBlockChainsPaymentMethod = paymentAccount.getPaymentMethod().getId().equals("BLOCK_CHAINS");
+        var isBlockChainsPaymentMethod = paymentAccount.getPaymentMethod().getId().equals("BLOCK_CHAINS");
         if (isBlockChainsPaymentMethod && !isXmr.test(selectedCurrencyCode))
             throw new IllegalStateException(
                     format("This bot only supports fiat and monero (XMR) trading, not the %s altcoin.",
                             selectedCurrencyCode));
 
         if (isBsq.test(selectedCurrencyCode))
-            throw new IllegalStateException("This bot does not support BSQ Swaps.");
+            throw new IllegalStateException("This bot supports BSQ swaps, but not BSQ v1 protocol trades\n."
+                    + "Let the API daemon handle the (default) payment account used for BSQ swaps.");
     }
 
     /**
@@ -632,9 +681,9 @@ public abstract class AbstractBot {
      * Print information about offers taken during bot simulation.
      */
     protected void printDryRunProgress() {
-        if (isDryRun && offersTaken.size() > 0) {
-            log.info("You have \"taken\" {} offer(s) during dry run:", offersTaken.size());
-            printOffersSummary(offersTaken);
+        if (isDryRun && offersTakenDuringDryRun.size() > 0) {
+            log.info("You have \"taken\" {} offer(s) during dry run:", offersTakenDuringDryRun.size());
+            printOffersSummary(offersTakenDuringDryRun);
         }
     }
 
@@ -642,7 +691,7 @@ public abstract class AbstractBot {
      * Add offer to list of taken offers -- for dry runs only.
      */
     protected void addToOffersTaken(OfferInfo offer) {
-        offersTaken.add(offer);
+        offersTakenDuringDryRun.add(offer);
         printOfferSummary(offer);
         log.info("Did not actually take that offer during this simulation.");
     }
@@ -667,6 +716,38 @@ public abstract class AbstractBot {
     }
 
     /**
+     * Log the non-fatal exception, and stall the bot if the NonFatalException has a stallTime value > 0.
+     */
+    protected void handleNonFatalException(NonFatalException nonFatalException, long pollingInterval) {
+        log.warn(nonFatalException.getMessage());
+        if (nonFatalException.hasStallTime()) {
+            long stallTime = nonFatalException.getStallTime();
+            log.warn("A minute must pass between the previous and the next takeoffer attempt."
+                            + "  Stalling for {} seconds before the next takeoffer attempt.",
+                    toSeconds.apply(stallTime + pollingInterval));
+            runCountdown(log, stallTime);
+        } else {
+            runCountdown(log, pollingInterval);
+        }
+    }
+
+    /**
+     * Lock the wallet, stop the API daemon, and terminate the bot with a non-zero status (error).
+     */
+    protected void shutdownAfterTakeOfferFailure(StatusRuntimeException fatalException) {
+        log.error("", fatalException);
+        shutdownAfterFatalError("Shutting down API daemon and bot after fatal takeoffer error.");
+    }
+
+    /**
+     * Log the fatal BSQ swap exception, shut down the API daemon, and terminate the bot with a non-zero status (error).
+     */
+    protected void handleFatalBsqSwapException(StatusRuntimeException fatalException) {
+        log.error("", fatalException);
+        shutdownAfterFatalError("Shutting down API daemon and bot after failing to execute BSQ swap.");
+    }
+
+    /**
      * Lock the wallet, stop the API daemon, and terminate the bot with a non-zero status (error).
      */
     protected void shutdownAfterFatalError(String errorMessage) {
@@ -681,6 +762,88 @@ public abstract class AbstractBot {
         log.error("Sending stop request to daemon.");
         stopDaemon();
         exit(1);
+    }
+
+    /**
+     * Print the day's completed trades since midnight today, then:
+     * <p>
+     * If numOffersTaken >= maxTakeOffers, and trade completion is being simulated on regtest, shut down the bot.
+     * <p>
+     * If numOffersTaken >= maxTakeOffers, and mainnet trade completion must be delegated to the UI, shut down the
+     * API daemon and the bot.
+     * <p>
+     * If numOffersTaken < maxTakeOffers, just log the number of offers taken so far during the bot run.
+     * (Don't shut down anything.)
+     *
+     * @param numOffersTaken the number of offers taken during bot run
+     * @param maxTakeOffers  the max number of offers that can be taken during bot run
+     */
+    protected void maybeShutdownAfterSuccessfulSwap(int numOffersTaken, int maxTakeOffers) {
+        log.info("Here are today's completed trades:");
+        printTradesSummaryForToday(CLOSED);
+
+        if (!isDryRun) {
+            try {
+                lockWallet();
+            } catch (NonFatalException ex) {
+                log.warn(ex.getMessage());
+            }
+        }
+        if (numOffersTaken >= maxTakeOffers) {
+            isShutdown = true;
+            log.info("Shutting down API bot after executing {} BSQ swaps.", numOffersTaken);
+            exit(0);
+        } else {
+            log.info("You have completed {} BSQ swap(s) during this bot session.", numOffersTaken);
+        }
+    }
+
+    /**
+     * Print the day's completed trades since midnight today, then:
+     * <p>
+     * If numOffersTaken >= maxTakeOffers, and trade completion is being simulated on regtest, shut down the bot.
+     * <p>
+     * If numOffersTaken >= maxTakeOffers, and mainnet trade completion must be delegated to the UI, shut down the
+     * API daemon and the bot.
+     * <p>
+     * If numOffersTaken < maxTakeOffers, just log the number of offers taken so far during the bot run.
+     * (Don't shut down anything.)
+     *
+     * @param numOffersTaken the number of offers taken during bot run
+     * @param maxTakeOffers  the max number of offers that can be taken during bot run
+     */
+    protected void maybeShutdownAfterSuccessfulTradeCreation(int numOffersTaken, int maxTakeOffers) {
+        log.info("Here are today's completed trades:");
+        printTradesSummaryForToday(CLOSED);
+
+        if (!isDryRun) {
+            // If the bot is not in dryrun mode, lock the wallet.  If dryrun=true, leave the wallet unlocked until the
+            // timeout expires, so the user can look at data in the daemon with the CLI (a convenience in dev/test).
+            try {
+                lockWallet();
+            } catch (NonFatalException ex) {
+                log.warn(ex.getMessage());
+            }
+        }
+        if (numOffersTaken >= maxTakeOffers) {
+            isShutdown = true;
+            if (canSimulatePaymentSteps) {
+                log.info("Shutting down bot after {} successful simulated trades."
+                                + "  API daemon will not be shut down.",
+                        numOffersTaken);
+                sleep(2_000);
+            } else {
+                log.info("Shutting down API daemon and bot after taking {} offers."
+                                + "  Complete the trade(s) with the desktop UI.",
+                        numOffersTaken);
+                sleep(2_000);
+                log.info("Sending stop request to daemon.");
+                stopDaemon();
+            }
+            exit(0);
+        } else {
+            log.info("You have taken {} offers during this bot session.", numOffersTaken);
+        }
     }
 
     /**

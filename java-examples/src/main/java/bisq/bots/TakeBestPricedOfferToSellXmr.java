@@ -32,31 +32,46 @@ import static java.math.RoundingMode.HALF_UP;
 import static protobuf.OfferDirection.BUY;
 
 /**
- * Bot for buying BSQ with BTC at an attractive (lower) price.  The bot receives BSQ for BTC.
+ * The use case for the TakeBestPricedOfferToSellXmr bot is to buy XMR with BTC at a low BTC price, e.g.:
+ * <pre>
+ *      Take an offer to sell you XMR for BTC, at no more than #.##% above or below current market price if:
+ *          the offer maker is a preferred trading peer,
+ *          and the offer's BTC amount is between 0.50 and 1.00 BTC,
+ *          and the current transaction mining fee rate is below 15 sats / byte.
+ *
+ * Usage:  TakeBestPricedOfferToSellXmr  --password=api-password --port=api-port \
+ *                          [--conf=take-best-priced-offer-to-sell-xmr.conf] \
+ *                          [--dryrun=true|false]
+ *                          [--simulate-regtest-payment=true|false]
+ * </pre>
+ * <p>
+ * The criteria for determining which offers to take are defined in the bot's configuration file
+ * TakeBestPricedOfferToSellXmr.properties (located in project's src/main/resources directory).  The individual
+ * configurations are commented in the existing TakeBestPricedOfferToSellXmr.properties, which should be used as a
+ * template for your own use case.
  */
 @Slf4j
 @Getter
-public class TakeBestPricedOfferToSellBsq extends AbstractBot {
+public class TakeBestPricedOfferToSellXmr extends AbstractBot {
 
-    // Taker bot's default BSQ payment account trading currency code.
-    private static final String CURRENCY_CODE = "BSQ";
+    // Taker bot's XMR payment account trading currency code.
+    private static final String CURRENCY_CODE = "XMR";
 
-    // Config file:  resources/TakeBestPricedOfferToSellBsq.properties.
+    // Config file:  resources/TakeBestPricedOfferToSellXmr.properties.
     private final Properties configFile;
-    // Taker bot's default BSQ Swap payment account.
+    // Taker bot's XMR payment account (if the configured paymentAccountId is valid).
     private final PaymentAccount paymentAccount;
-    // Taker bot's max market price margin.  A takeable BSQ Swap offer's fixed-price must be <= maxMarketPriceMargin (%).
-    // Note:  all BSQ Swap offers have a fixed-price, but the bot uses a margin (%) of the 30-day price for comparison.
+    // Taker bot's maximum market price margin.  A takeable offer's price margin (%) must be <= maxMarketPriceMargin (%).
     private final BigDecimal maxMarketPriceMargin;
-    // Hard coded 30-day average BSQ trade price, used for development over regtest (ignored when running on mainnet).
-    private final BigDecimal regtest30DayAvgBsqPrice;
-    // Taker bot's minimum BTC amount to trade.  A takeable offer's amount must be >= minAmount BTC.
+    // Taker bot's min BTC amount to trade.  A takeable offer's amount must be >= minAmount BTC.
     private final BigDecimal minAmount;
-    // Taker bot's maximum BTC amount to trade.  A takeable offer's amount must be <= maxAmount BTC.
+    // Taker bot's max BTC amount to trade.   A takeable offer's amount must be <= maxAmount BTC.
     private final BigDecimal maxAmount;
     // Taker bot's max acceptable transaction fee rate.
     private final long maxTxFeeRate;
-    // Maximum # of offers to take during one bot session (shut down bot after taking N swap offers).
+    // Taker bot's trading fee currency code (BSQ or BTC).
+    private final String bisqTradeFeeCurrency;
+    // Maximum # of offers to take during one bot session (shut down bot after taking N offers).
     private final int maxTakeOffers;
 
     // Offer polling frequency must be > 1000 ms between each getoffers request.
@@ -65,32 +80,34 @@ public class TakeBestPricedOfferToSellBsq extends AbstractBot {
     // The # of offers taken during the bot session (since startup).
     private int numOffersTaken = 0;
 
-    public TakeBestPricedOfferToSellBsq(String[] args) {
+    public TakeBestPricedOfferToSellXmr(String[] args) {
         super(args);
         pingDaemon(new Date().getTime()); // Shut down now if API daemon is not available.
         this.configFile = loadConfigFile();
-        this.paymentAccount = getBsqSwapPaymentAccount();
+        this.paymentAccount = getPaymentAccount(configFile.getProperty("paymentAccountId"));
         this.maxMarketPriceMargin = new BigDecimal(configFile.getProperty("maxMarketPriceMargin"))
                 .setScale(2, HALF_UP);
-        this.regtest30DayAvgBsqPrice = new BigDecimal(configFile.getProperty("regtest30DayAvgBsqPrice"))
-                .setScale(8, HALF_UP);
         this.minAmount = new BigDecimal(configFile.getProperty("minAmount"));
         this.maxAmount = new BigDecimal(configFile.getProperty("maxAmount"));
         this.maxTxFeeRate = Long.parseLong(configFile.getProperty("maxTxFeeRate"));
+        this.bisqTradeFeeCurrency = configFile.getProperty("bisqTradeFeeCurrency");
         this.maxTakeOffers = Integer.parseInt(configFile.getProperty("maxTakeOffers"));
         loadPreferredOnionAddresses.accept(configFile, preferredTradingPeers);
         this.pollingInterval = Long.parseLong(configFile.getProperty("pollingInterval"));
     }
 
     /**
-     * Checks for the most attractive BSQ Swap offer to take every {@link #pollingInterval} ms.
-     * Will only terminate when manually shut down, or a fatal gRPC StatusRuntimeException is thrown.
+     * Checks for the most attractive offer to take every {@link #pollingInterval} ms.  After {@link #maxTakeOffers}
+     * are taken, bot will stop the API daemon, then shut itself down, prompting the user to start the desktop UI
+     * to complete the trade.
      */
     @Override
     public void run() {
         var startTime = new Date().getTime();
         validateWalletPassword(walletPassword);
         validatePollingInterval(pollingInterval);
+        validateTradeFeeCurrencyCode(bisqTradeFeeCurrency);
+        validatePaymentAccount(paymentAccount, CURRENCY_CODE);
         printBotConfiguration();
 
         while (!isShutdown) {
@@ -99,7 +116,8 @@ public class TakeBestPricedOfferToSellBsq extends AbstractBot {
                 continue;
             }
 
-            // Get all available and takeable offers, sorted by price ascending.
+            // Get all available and takeable buy BTC for XMR offers, sorted by price ascending.
+            // The list may contain both fixed-price and market price margin based offers.
             var offers = getOffers(BUY.name(), CURRENCY_CODE).stream()
                     .filter(o -> !isAlreadyTaken.test(o))
                     .toList();
@@ -111,7 +129,7 @@ public class TakeBestPricedOfferToSellBsq extends AbstractBot {
             }
 
             // Define criteria for taking an offer, based on conf file.
-            TakeBestPricedOfferToSellBsq.TakeCriteria takeCriteria = new TakeBestPricedOfferToSellBsq.TakeCriteria();
+            TakeCriteria takeCriteria = new TakeCriteria();
             takeCriteria.printCriteriaSummary();
             takeCriteria.printOffersAgainstCriteria(offers);
 
@@ -131,46 +149,62 @@ public class TakeBestPricedOfferToSellBsq extends AbstractBot {
         }
     }
 
+    /**
+     * Attempt to take the available offer according to configured criteria.  If successful, will block until a new
+     * trade is fully initialized with a trade contract.  Otherwise, handles a non-fatal error and allows the bot to
+     * stay alive, or shuts down the bot upon fatal error.
+     */
     private void takeOffer(TakeCriteria takeCriteria, OfferInfo offer) {
         log.info("Will attempt to take offer '{}'.", offer.getId());
         takeCriteria.printOfferAgainstCriteria(offer);
         if (isDryRun) {
             addToOffersTaken(offer);
             numOffersTaken++;
-            maybeShutdownAfterSuccessfulSwap(numOffersTaken, maxTakeOffers);
+            maybeShutdownAfterSuccessfulTradeCreation(numOffersTaken, maxTakeOffers);
         } else {
             // An encrypted wallet must be unlocked before calling takeoffer and gettrade.
-            // Unlock the wallet for 10 minutes.  If the wallet is already unlocked,
+            // Unlock the wallet for 5 minutes.  If the wallet is already unlocked,
             // this command will override the timeout of the previous unlock command.
             try {
                 unlockWallet(walletPassword, 600);
+                printBTCBalances("BTC Balances Before Take Offer Attempt");
+                // Blocks until new trade is prepared, or times out.
+                takeV1ProtocolOffer(offer, paymentAccount, bisqTradeFeeCurrency, pollingInterval);
+                printBTCBalances("BTC Balances After Take Offer Attempt");
 
-                printBTCBalances("BTC Balances Before Swap Execution");
-                printBSQBalances("BSQ Balances Before Swap Execution");
-
-                // Blocks until swap is executed, or times out.
-                takeBsqSwapOffer(offer, pollingInterval);
-
-                printBTCBalances("BTC Balances After Swap Execution");
-                printBSQBalances("BSQ Balances After Swap Execution");
-
+                if (canSimulatePaymentSteps) {
+                    var newTrade = getTrade(offer.getId());
+                    RegtestTradePaymentSimulator tradePaymentSimulator = new RegtestTradePaymentSimulator(args,
+                            newTrade.getTradeId(),
+                            paymentAccount);
+                    tradePaymentSimulator.run();
+                    printBTCBalances("BTC Balances After Simulated Trade Completion");
+                }
                 numOffersTaken++;
-                maybeShutdownAfterSuccessfulSwap(numOffersTaken, maxTakeOffers);
+                maybeShutdownAfterSuccessfulTradeCreation(numOffersTaken, maxTakeOffers);
             } catch (NonFatalException nonFatalException) {
                 handleNonFatalException(nonFatalException, pollingInterval);
             } catch (StatusRuntimeException fatalException) {
-                handleFatalBsqSwapException(fatalException);
+                shutdownAfterTakeOfferFailure(fatalException);
             }
         }
     }
+
+    /**
+     * Return true is fixed-price offer's price <= the bot's max market price margin.  Allows bot to take a
+     * fixed-priced offer if the price is <= {@link #maxMarketPriceMargin} (%) of the current market price.
+     */
+    protected final BiPredicate<OfferInfo, BigDecimal> isFixedPriceLEMaxMarketPriceMargin =
+            (offer, currentMarketPrice) -> BotUtils.isFixedPriceLEMaxMarketPriceMargin(
+                    offer,
+                    currentMarketPrice,
+                    this.getMaxMarketPriceMargin());
 
     private void printBotConfiguration() {
         var configsByLabel = new LinkedHashMap<String, Object>();
         configsByLabel.put("Bot OS:", getOSName() + " " + getOSVersion());
         var network = getNetwork();
         configsByLabel.put("BTC Network:", network);
-        var isMainnet = network.equalsIgnoreCase("mainnet");
-        var mainnet30DayAvgBsqPrice = isMainnet ? get30DayAvgBsqPriceInBtc() : null;
         configsByLabel.put("My Payment Account:", "");
         configsByLabel.put("\tPayment Account Id:", paymentAccount.getId());
         configsByLabel.put("\tAccount Name:", paymentAccount.getAccountName());
@@ -179,11 +213,6 @@ public class TakeBestPricedOfferToSellBsq extends AbstractBot {
         configsByLabel.put("\tMax # of offers bot can take:", maxTakeOffers);
         configsByLabel.put("\tMax Tx Fee Rate:", maxTxFeeRate + " sats/byte");
         configsByLabel.put("\tMax Market Price Margin:", maxMarketPriceMargin + "%");
-        if (isMainnet) {
-            configsByLabel.put("\tMainnet 30-Day Avg BSQ Price:", mainnet30DayAvgBsqPrice + " BTC");
-        } else {
-            configsByLabel.put("\tRegtest 30-Day Avg BSQ Price:", regtest30DayAvgBsqPrice + " BTC");
-        }
         configsByLabel.put("\tMin BTC Amount:", minAmount + " BTC");
         configsByLabel.put("\tMax BTC Amount: ", maxAmount + " BTC");
         if (iHavePreferredTradingPeers.get()) {
@@ -195,18 +224,8 @@ public class TakeBestPricedOfferToSellBsq extends AbstractBot {
         log.info(toTable.apply("Bot Configuration", configsByLabel));
     }
 
-    /**
-     * Return true is fixed-price offer's price <= the bot's max market price margin.  Allows bot to take a
-     * fixed-priced offer if the price is <= {@link #maxMarketPriceMargin} (%) of the current market price.
-     */
-    protected final BiPredicate<OfferInfo, BigDecimal> isFixedPriceLEMaxMarketPriceMargin =
-            (offer, currentMarketPrice) -> BotUtils.isFixedPriceLEMaxMarketPriceMargin(
-                    offer,
-                    currentMarketPrice,
-                    getMaxMarketPriceMargin());
-
     public static void main(String[] args) {
-        TakeBestPricedOfferToSellBsq bot = new TakeBestPricedOfferToSellBsq(args);
+        TakeBestPricedOfferToSellXmr bot = new TakeBestPricedOfferToSellXmr(args);
         bot.run();
     }
 
@@ -215,21 +234,20 @@ public class TakeBestPricedOfferToSellBsq extends AbstractBot {
      * performs candidate offer filtering, and provides useful log statements.
      */
     private class TakeCriteria {
-        private static final String MARKET_DESCRIPTION = "Sell BSQ (Buy BTC)";
+        private static final String MARKET_DESCRIPTION = "Sell XMR (Buy BTC)";
 
-        private final BigDecimal avgBsqPrice;
+        private final BigDecimal currentMarketPrice;
         @Getter
         private final BigDecimal targetPrice;
 
         public TakeCriteria() {
-            this.avgBsqPrice = isConnectedToMainnet() ? get30DayAvgBsqPriceInBtc() : regtest30DayAvgBsqPrice;
-            this.targetPrice = calcTargetBsqPrice(maxMarketPriceMargin, avgBsqPrice);
+            this.currentMarketPrice = getCurrentMarketPrice(CURRENCY_CODE);
+            this.targetPrice = calcTargetPrice(maxMarketPriceMargin, currentMarketPrice, CURRENCY_CODE);
         }
-
 
         /**
          * Returns the lowest priced offer passing the filters, or Optional.empty() if not found.
-         * Max tx fee rate filtering should have passed prior to calling this method.
+         * The max tx fee rate filtering should have passed prior to calling this method.
          *
          * @param offers to filter
          */
@@ -238,36 +256,37 @@ public class TakeBestPricedOfferToSellBsq extends AbstractBot {
                 return offers.stream()
                         .filter(o -> usesSamePaymentMethod.test(o, getPaymentAccount()))
                         .filter(isMakerPreferredTradingPeer)
-                        .filter(o -> isFixedPriceLEMaxMarketPriceMargin.test(o, avgBsqPrice))
+                        .filter(o -> isMarginLEMaxMarketPriceMargin.test(o, maxMarketPriceMargin)
+                                || isFixedPriceLEMaxMarketPriceMargin.test(o, currentMarketPrice))
                         .filter(o -> isWithinBTCAmountBounds(o, getMinAmount(), getMaxAmount()))
                         .findFirst();
             else
                 return offers.stream()
                         .filter(o -> usesSamePaymentMethod.test(o, getPaymentAccount()))
-                        .filter(o -> isFixedPriceLEMaxMarketPriceMargin.test(o, avgBsqPrice))
+                        .filter(o -> isMarginLEMaxMarketPriceMargin.test(o, maxMarketPriceMargin)
+                                || isFixedPriceLEMaxMarketPriceMargin.test(o, currentMarketPrice))
                         .filter(o -> isWithinBTCAmountBounds(o, getMinAmount(), getMaxAmount()))
                         .findFirst();
         }
 
         void printCriteriaSummary() {
             if (isZero.test(maxMarketPriceMargin)) {
-                log.info("Looking for offers to {}, with a fixed-price at or lower than"
-                                + " the 30-day average BSQ trade price of {} BTC.",
+                log.info("Looking for offers to {}, priced at or lower than the current market price of {} BTC.",
                         MARKET_DESCRIPTION,
-                        avgBsqPrice);
+                        currentMarketPrice);
             } else {
-                log.info("Looking for offers to {}, with a fixed-price at or lower than"
-                                + " {}% {} the 30-day average BSQ trade price of {} BTC.",
+                log.info("Looking for offers to {}, priced at or lower than {}% {} the current market price of {} BTC.",
                         MARKET_DESCRIPTION,
                         maxMarketPriceMargin.abs(), // Hide the sign, text explains target price % "above or below".
                         aboveOrBelowMaxMarketPriceMargin.apply(maxMarketPriceMargin),
-                        avgBsqPrice);
+                        currentMarketPrice);
             }
         }
 
         void printOffersAgainstCriteria(List<OfferInfo> offers) {
-            log.info("Currently available {} offers -- want to take BSQ swap offer with fixed-price <= {} BTC.",
+            log.info("Currently available {} offers -- want to take {} offer with price <= {} BTC.",
                     MARKET_DESCRIPTION,
+                    CURRENCY_CODE,
                     targetPrice);
             printOffersSummary(offers);
         }
@@ -276,24 +295,34 @@ public class TakeBestPricedOfferToSellBsq extends AbstractBot {
             printOfferSummary(offer);
 
             var filterResultsByLabel = new LinkedHashMap<String, Object>();
-            filterResultsByLabel.put("30-day Avg BSQ trade price:", avgBsqPrice + " BTC");
-            filterResultsByLabel.put("Target Price (Min):", targetPrice + " BTC");
-            filterResultsByLabel.put("Offer Price:", offer.getPrice() + " BTC");
+            filterResultsByLabel.put("Current Market Price:", currentMarketPrice + " " + CURRENCY_CODE);
+            filterResultsByLabel.put("Target Price (Max):", targetPrice + " " + CURRENCY_CODE);
+            filterResultsByLabel.put("Offer Price:", offer.getPrice() + " " + CURRENCY_CODE);
             filterResultsByLabel.put("Offer maker used same payment method?",
                     usesSamePaymentMethod.test(offer, getPaymentAccount()));
-            filterResultsByLabel.put("Is offer's maker a preferred trading peer?",
+            filterResultsByLabel.put("Is offer maker a preferred trading peer?",
                     iHavePreferredTradingPeers.get()
                             ? isMakerPreferredTradingPeer.test(offer) ? "YES" : "NO"
                             : "N/A");
-            var fixedPriceLabel = format("Is offer's fixed-price (%s) <= bot's minimum price (%s)?",
-                    offer.getPrice() + " BTC",
-                    targetPrice + " BTC");
-            filterResultsByLabel.put(fixedPriceLabel, isFixedPriceLEMaxMarketPriceMargin.test(offer, avgBsqPrice));
-            var btcAmountBounds = format("%s BTC - %s BTC", minAmount, maxAmount);
+
+            if (offer.getUseMarketBasedPrice()) {
+                var marginPriceLabel = format("Is offer's price margin (%s%%) <= bot's max market price margin (%s%%)?",
+                        offer.getMarketPriceMarginPct(),
+                        maxMarketPriceMargin);
+                filterResultsByLabel.put(marginPriceLabel, isMarginLEMaxMarketPriceMargin.test(offer, maxMarketPriceMargin));
+            } else {
+                var fixedPriceLabel = format("Is offer's fixed-price (%s) <= bot's target price (%s)?",
+                        offer.getPrice() + " BTC",
+                        targetPrice + " BTC");
+                filterResultsByLabel.put(fixedPriceLabel, isFixedPriceLEMaxMarketPriceMargin.test(offer, currentMarketPrice));
+            }
+            String btcAmountBounds = format("%s BTC - %s BTC", minAmount, maxAmount);
             filterResultsByLabel.put("Is offer's BTC amount within bot amount bounds (" + btcAmountBounds + ")?",
                     isWithinBTCAmountBounds(offer, getMinAmount(), getMaxAmount()));
 
-            var title = format("Fixed price BSQ swap offer %s filter results:", offer.getId());
+            var title = format("%s offer %s filter results:",
+                    offer.getUseMarketBasedPrice() ? "Margin based" : "Fixed price",
+                    offer.getId());
             log.info(toTable.apply(title, filterResultsByLabel));
         }
     }
