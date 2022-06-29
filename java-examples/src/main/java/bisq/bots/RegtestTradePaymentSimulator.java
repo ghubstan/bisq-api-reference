@@ -24,7 +24,6 @@ import protobuf.PaymentAccount;
 import java.util.Properties;
 
 import static bisq.bots.BotUtils.*;
-import static bisq.proto.grpc.GetTradesRequest.Category.CLOSED;
 import static io.grpc.Status.Code.PERMISSION_DENIED;
 
 /**
@@ -113,11 +112,7 @@ public class RegtestTradePaymentSimulator extends AbstractBot {
         log.warn(copyPasteCliCommands);
         log.warn("##############################################################################");
 
-        sleep(pollingInterval);
-        log.info("Trade is completed.  Here are today's completed trades:");
-        printTradesSummaryForToday(CLOSED);
-
-        log.info("Closing {}'s gRPC channel.", this.getClass().getSimpleName());
+        log.debug("Closing {}'s gRPC channel.", this.getClass().getSimpleName());
         super.grpcStubs.close();
     }
 
