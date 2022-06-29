@@ -42,6 +42,7 @@ import static java.lang.String.format;
 import static java.lang.System.*;
 import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.HALF_UP;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Convenience methods and functions not depending on a bot's state nor the need to send requests to the API daemon.
@@ -407,6 +408,7 @@ public class BotUtils {
      * @param offer printed offer
      */
     public static void printOfferSummary(OfferInfo offer) {
+        requireNonNull(offer, "OfferInfo offer param cannot be null.");
         new TableBuilder(OFFER_TBL, offer).build().print(out);
     }
 
@@ -416,7 +418,12 @@ public class BotUtils {
      * @param offers printed offer list
      */
     public static void printOffersSummary(List<OfferInfo> offers) {
-        new TableBuilder(OFFER_TBL, offers).build().print(out);
+        requireNonNull(offers, "List<OfferInfo> offers param cannot be null.");
+        if (offers.isEmpty()) {
+            log.info("No offers to print.");
+        } else {
+            new TableBuilder(OFFER_TBL, offers).build().print(out);
+        }
     }
 
     /**
@@ -425,6 +432,7 @@ public class BotUtils {
      * @param trade printed trade
      */
     public static void printTradeSummary(TradeInfo trade) {
+        requireNonNull(trade, "TradeInfo trade param cannot be null.");
         new TableBuilder(TRADE_DETAIL_TBL, trade).build().print(out);
     }
 
@@ -435,10 +443,15 @@ public class BotUtils {
      * @param trades   list of trades
      */
     public static void printTradesSummary(GetTradesRequest.Category category, List<TradeInfo> trades) {
-        switch (category) {
-            case CLOSED -> new TableBuilder(CLOSED_TRADES_TBL, trades).build().print(out);
-            case FAILED -> new TableBuilder(FAILED_TRADES_TBL, trades).build().print(out);
-            default -> new TableBuilder(OPEN_TRADES_TBL, trades).build().print(out);
+        requireNonNull(trades, "List<TradeInfo> trades param cannot be null.");
+        if (trades.isEmpty()) {
+            log.info("No trades to print.");
+        } else {
+            switch (category) {
+                case CLOSED -> new TableBuilder(CLOSED_TRADES_TBL, trades).build().print(out);
+                case FAILED -> new TableBuilder(FAILED_TRADES_TBL, trades).build().print(out);
+                default -> new TableBuilder(OPEN_TRADES_TBL, trades).build().print(out);
+            }
         }
     }
 
@@ -448,6 +461,7 @@ public class BotUtils {
      * @param paymentAccount the printed PaymentAccount
      */
     public static void printPaymentAccountSummary(PaymentAccount paymentAccount) {
+        requireNonNull(paymentAccount, "PaymentAccount paymentAccount param cannot be null.");
         new TableBuilder(PAYMENT_ACCOUNT_TBL, paymentAccount).build().print(out);
     }
 
