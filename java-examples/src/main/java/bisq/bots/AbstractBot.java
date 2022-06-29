@@ -890,7 +890,11 @@ public abstract class AbstractBot {
         try {
             var defaultFilename = defaultPropertiesFilename.get();
             properties.load(this.getClass().getClassLoader().getResourceAsStream(defaultFilename));
-            log.info("Internal configuration loaded from {}.", defaultFilename);
+            if (this instanceof RegtestTradePaymentSimulator) {
+                log.debug("Internal configuration loaded from {}.", defaultFilename);
+            } else {
+                log.info("Internal configuration loaded from {}.", defaultFilename);
+            }
         } catch (Exception ex) {
             throw new IllegalStateException(ex);
         }
@@ -911,7 +915,11 @@ public abstract class AbstractBot {
             Properties properties = new java.util.Properties();
             try {
                 properties.load(is);
-                log.info("External configuration loaded from {}.", confFile.getAbsolutePath());
+                if (this instanceof RegtestTradePaymentSimulator) {
+                    log.debug("External configuration loaded from {}.", confFile.getAbsolutePath());
+                } else {
+                    log.info("External configuration loaded from {}.", confFile.getAbsolutePath());
+                }
                 return properties;
             } catch (FileNotFoundException ignored) {
                 // Cannot happen here.  Ignore FileNotFoundException because confFile.exists() == true.
