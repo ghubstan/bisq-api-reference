@@ -710,8 +710,7 @@ public abstract class AbstractBot {
      * Print information about offers taken during bot simulation.
      */
     protected void printDryRunProgress() {
-        if (isDryRun && offersTakenDuringDryRun.size() > 0) {
-            log.info("You have \"taken\" {} offer(s) during dry run:", offersTakenDuringDryRun.size());
+        if (isDryRun && !offersTakenDuringDryRun.isEmpty()) {
             printOffersSummary(offersTakenDuringDryRun);
         }
     }
@@ -721,8 +720,6 @@ public abstract class AbstractBot {
      */
     protected void addToOffersTaken(OfferInfo offer) {
         offersTakenDuringDryRun.add(offer);
-        printOfferSummary(offer);
-        log.info("Did not actually take that offer during this simulation.");
     }
 
     /**
@@ -828,7 +825,7 @@ public abstract class AbstractBot {
     }
 
     /**
-     * Print the day's completed trades since midnight today, then:
+     * Print the day's completed trades since midnight today, and number of offers taken during the bot session, then,
      * <p>
      * If numOffersTaken >= maxTakeOffers, and trade completion is being simulated on regtest, shut down the bot.
      * <p>
@@ -843,15 +840,15 @@ public abstract class AbstractBot {
      */
     protected void maybeShutdownAfterSuccessfulTradeCreation(int numOffersTaken, int maxTakeOffers) {
         printTradesSummaryForTodayIfWalletIsUnlocked();
-        if (!isDryRun) {
-            // If the bot is not in dryrun mode, lock the wallet.  If dryrun=true, leave the wallet unlocked until the
-            // timeout expires, so the user can look at data in the daemon with the CLI (a convenience in dev/test).
-            try {
-                lockWallet();
-            } catch (NonFatalException ex) {
-                log.warn(ex.getMessage());
-            }
+
+        log.info("You {} have taken {} offer(s) during this bot's {}",
+                isDryRun ? "would" : "",
+                numOffersTaken,
+                isDryRun ? "dryrun:" : "session.");
+        if (isDryRun) {
+            printDryRunProgress();
         }
+
         if (numOffersTaken >= maxTakeOffers) {
             isShutdown = true;
             if (canSimulatePaymentSteps) {
@@ -868,8 +865,6 @@ public abstract class AbstractBot {
                 stopDaemon();
             }
             exit(0);
-        } else {
-            log.info("You have taken {} offers during this bot session.", numOffersTaken);
         }
     }
 
