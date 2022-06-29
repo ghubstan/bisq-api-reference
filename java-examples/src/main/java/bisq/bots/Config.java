@@ -17,6 +17,7 @@
 package bisq.bots;
 
 
+import joptsimple.BuiltinHelpFormatter;
 import joptsimple.OptionParser;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -63,12 +64,12 @@ public class Config {
                 .withRequiredArg();
         var confOpt = parser.accepts("conf", "Bot configuration file (required)")
                 .withRequiredArg();
-        var dryRunOpt = parser.accepts("dryrun", "Pretend to take an offer (default=false)")
+        var dryRunOpt = parser.accepts("dryrun", "Pretend to take an offer")
                 .withRequiredArg()
                 .ofType(boolean.class)
                 .defaultsTo(FALSE);
         var simulateRegtestPaymentStepsOpt =
-                parser.accepts("simulate-regtest-payment", "Simulate regtest payment steps (default=false)")
+                parser.accepts("simulate-regtest-payment", "Simulate regtest payment steps")
                         .withOptionalArg()
                         .ofType(boolean.class)
                         .defaultsTo(FALSE);
@@ -126,10 +127,23 @@ public class Config {
             stream.println();
             stream.println("Usage: ScriptName [options]");
             stream.println();
+            parser.formatHelpWith(new HelpFormatter(90, 2));
             parser.printHelpOn(stream);
             stream.println();
         } catch (IOException ex) {
             ex.printStackTrace(stream);
+        }
+    }
+
+    private static class HelpFormatter extends BuiltinHelpFormatter {
+        /**
+         * Makes a formatter with a given overall row width and column separator width.
+         *
+         * @param desiredOverallWidth         how many characters wide to make the overall help display
+         * @param desiredColumnSeparatorWidth how many characters wide to make the separation between option column and
+         */
+        public HelpFormatter(int desiredOverallWidth, int desiredColumnSeparatorWidth) {
+            super(desiredOverallWidth, desiredColumnSeparatorWidth);
         }
     }
 }
