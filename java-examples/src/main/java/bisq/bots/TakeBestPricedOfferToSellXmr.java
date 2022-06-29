@@ -32,23 +32,49 @@ import static java.math.RoundingMode.HALF_UP;
 import static protobuf.OfferDirection.BUY;
 
 /**
- * The use case for the TakeBestPricedOfferToSellXmr bot is to buy XMR with BTC at a low BTC price, e.g.:
- * <pre>
- *      Take an offer to sell you XMR for BTC, at no more than #.##% above or below current market price if:
- *          the offer maker is a preferred trading peer,
- *          and the offer's BTC amount is between 0.50 and 1.00 BTC,
- *          and the current transaction mining fee rate is below 15 sats / byte.
- *
- * Usage:  TakeBestPricedOfferToSellXmr  --password=api-password --port=api-port \
- *                          [--conf=take-best-priced-offer-to-sell-xmr.conf] \
- *                          [--dryrun=true|false]
- *                          [--simulate-regtest-payment=true|false]
- * </pre>
+ * This bot's general use case is to buy XMR with BTC at a low BTC price.  It periodically checks the Sell XMR (Buy BTC)
+ * market, and takes a configured number of offers to sell you XMR according to criteria you define in the bot's
+ * configuration file TakeBestPricedOfferToSellXmr.properties (located in project's src/main/resources directory).
+ * You will need to replace the default values in the configuration file for your use cases.
+ * <p><br/>
+ * After the maximum number of offers have been taken (good to start with 1), the bot will shut down the API daemon,
+ * then the bot itself.  You have to confirm the offer maker's XMR payment(s) offline, then complete the trade(s) in
+ * the <a href="https://bisq.network">Bisq Desktop</a> application.
  * <p>
- * The criteria for determining which offers to take are defined in the bot's configuration file
- * TakeBestPricedOfferToSellXmr.properties (located in project's src/main/resources directory).  The individual
- * configurations are commented in the existing TakeBestPricedOfferToSellXmr.properties, which should be used as a
- * template for your own use case.
+ * Here is one possible use case:
+ * <pre>
+ *  Take 1 offer to sell you XMR for BTC, priced no higher than 0.00% above or below current market price if:
+ *
+ *          the offer's BTC amount is between 0.50 and 1.00 BTC
+ *          the offer maker is one of two preferred trading peers
+ *          the current transaction mining fee rate is below 15 sats / byte
+ *
+ *  The bot configurations for these rules are set in TakeBestPricedOfferToSellXmr.properties as follows:
+ *
+ *          maxTakeOffers=1
+ *          maxMarketPriceMargin=0.00
+ *          minAmount=0.50
+ *          maxAmount=1.00
+ *          preferredTradingPeers=preferred-address-1.onion:9999,preferred-address-2.onion:9999
+ *          maxTxFeeRate=15
+ * </pre>
+ * <b>Usage</b>
+ * <p><br/>
+ * There are some {@link bisq.bots.Config program options} common to all the Java bot examples, passed on the command
+ * line.  The only one required every time the bot is run is your API daemon's password option: `--password <String>`.
+ * The bot will prompt you for your wallet-password in the console.
+ * <p><br/>
+ * You can pass the '--dryrun=true' option to the program to see what offers your bot <i>would take</i> with a given
+ * configuration.  This will help you avoid taking offers by mistake.
+ * <pre>
+ *     TakeBestPricedOfferToSellXmr  --password=api-password --port=api-port [--dryrun=true|false]
+ * </pre>
+ * If your API daemon is running on a local regtest network (with a trading peer), you can pass the
+ * '--simulate-regtest-payment=true' option to the program to simulate the full trade protocol.  The bot will print
+ * your regtest trading peer's CLI commands will be printed on the console, for you to copy/paste into another terminal.
+ * <pre>
+ *     TakeBestPricedOfferToSellXmr  --password=api-password --port=api-port [--simulate-regtest-payment=true|false]
+ * </pre>
  */
 @Slf4j
 @Getter
