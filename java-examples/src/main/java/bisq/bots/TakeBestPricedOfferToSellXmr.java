@@ -33,12 +33,12 @@ import static protobuf.OfferDirection.BUY;
 
 /**
  * This bot's general use case is to buy XMR with BTC at a low BTC price.  It periodically checks the Sell XMR (Buy BTC)
- * market, and takes a configured number of offers to sell you XMR according to criteria you define in the bot's
- * configuration file TakeBestPricedOfferToSellXmr.properties (located in project's src/main/resources directory).
+ * market, and takes a configured maximum number of offers to sell you XMR according to criteria you define in the bot's
+ * configuration file:  TakeBestPricedOfferToSellXmr.properties (located in project's src/main/resources directory).
  * You will need to replace the default values in the configuration file for your use cases.
  * <p><br/>
  * After the maximum number of offers have been taken (good to start with 1), the bot will shut down the API daemon,
- * then the bot itself.  You have to confirm the offer maker's XMR payment(s) offline, then complete the trade(s) in
+ * then itself.  You have to confirm the offer maker's XMR payment(s) outside Bisq, then complete the trade(s) in
  * the <a href="https://bisq.network">Bisq Desktop</a> application.
  * <p>
  * Here is one possible use case:
@@ -60,9 +60,13 @@ import static protobuf.OfferDirection.BUY;
  * </pre>
  * <b>Usage</b>
  * <p><br/>
+ * You must encrypt your wallet password before running this bot.  If it is not already, you can use the CLI:
+ * <pre>
+ *     $ ./bisq-cli --password=xyz --port=9998 setwalletpassword --wallet-password="be careful"
+ * </pre>
  * There are some {@link bisq.bots.Config program options} common to all the Java bot examples, passed on the command
- * line.  The only one required every time the bot is run is your API daemon's password option: `--password <String>`.
- * The bot will prompt you for your wallet-password in the console.
+ * line.  The only one you must provide (no default value) is your API daemon's password option:
+ * `--password <String>`.  The bot will prompt you for your wallet-password in the console.
  * <p><br/>
  * You can pass the '--dryrun=true' option to the program to see what offers your bot <i>would take</i> with a given
  * configuration.  This will help you avoid taking offers by mistake.
@@ -169,7 +173,6 @@ public class TakeBestPricedOfferToSellXmr extends AbstractBot {
                         takeCriteria.printOfferAgainstCriteria(cheapestOffer);
                     });
 
-            printDryRunProgress();
             runCountdown(log, pollingInterval);
             pingDaemon(startTime);
         }
@@ -183,16 +186,21 @@ public class TakeBestPricedOfferToSellXmr extends AbstractBot {
     private void takeOffer(TakeCriteria takeCriteria, OfferInfo offer) {
         log.info("Will attempt to take offer '{}'.", offer.getId());
         takeCriteria.printOfferAgainstCriteria(offer);
+
+        // An encrypted wallet must be unlocked before calling takeoffer and gettrade(s).
+        // Unlock the wallet for 5 minutes.  If the wallet is already unlocked, this request
+        // will override the timeout of the previous unlock request.
+        try {
+            unlockWallet(walletPassword, 300);
+        } catch (NonFatalException nonFatalException) {
+            handleNonFatalException(nonFatalException, pollingInterval);
+        }
+
         if (isDryRun) {
             addToOffersTaken(offer);
             numOffersTaken++;
-            maybeShutdownAfterSuccessfulTradeCreation(numOffersTaken, maxTakeOffers);
         } else {
-            // An encrypted wallet must be unlocked before calling takeoffer and gettrade.
-            // Unlock the wallet for 5 minutes.  If the wallet is already unlocked,
-            // this command will override the timeout of the previous unlock command.
             try {
-                unlockWallet(walletPassword, 600);
                 printBTCBalances("BTC Balances Before Take Offer Attempt");
                 // Blocks until new trade is prepared, or times out.
                 takeV1ProtocolOffer(offer, paymentAccount, bisqTradeFeeCurrency, pollingInterval);
@@ -207,12 +215,12 @@ public class TakeBestPricedOfferToSellXmr extends AbstractBot {
                     printBTCBalances("BTC Balances After Simulated Trade Completion");
                 }
                 numOffersTaken++;
-                maybeShutdownAfterSuccessfulTradeCreation(numOffersTaken, maxTakeOffers);
             } catch (NonFatalException nonFatalException) {
                 handleNonFatalException(nonFatalException, pollingInterval);
             } catch (StatusRuntimeException fatalException) {
                 shutdownAfterTakeOfferFailure(fatalException);
             }
+            maybeShutdownAfterSuccessfulTradeCreation(numOffersTaken, maxTakeOffers);
         }
     }
 
