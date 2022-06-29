@@ -346,6 +346,19 @@ public abstract class AbstractBot {
     }
 
     /**
+     * Return true if gRPC StatusRuntimeException indicates wallet is locked.  Sometimes this is a trivial error.
+     *
+     * @param grpcException a StatusRuntimeException
+     * @return true if gRPC StatusRuntimeException indicates wallet is locked
+     */
+    protected boolean walletIsLocked(StatusRuntimeException grpcException) {
+        var errorMsg = toCleanErrorMessage.apply(grpcException).toLowerCase();
+        return (exceptionHasStatus.test(grpcException, FAILED_PRECONDITION)
+                && errorMsg.contains("wallet")
+                && errorMsg.contains("locked"));
+    }
+
+    /**
      * Attempt to unlock the wallet for 1 second using the given password, and shut down the bot if the
      * password check fails for any reason.
      *
@@ -573,6 +586,22 @@ public abstract class AbstractBot {
     protected void printTradesSummary(Category category) {
         var trades = getTrades(category);
         BotUtils.printTradesSummary(category, trades);
+    }
+
+    /**
+     * Print the completed trades since midnight today, if the wallet is unlocked, else log an error message.
+     */
+    protected void printTradesSummaryForTodayIfWalletIsUnlocked() {
+        try {
+            log.info("Here are today's completed trades:");
+            printTradesSummaryForToday(CLOSED);
+        } catch (StatusRuntimeException grpcException) {
+            if (walletIsLocked(grpcException)) {
+                log.error("Cannot retrieve trades while API daemon's wallet is locked.");
+            } else {
+                throw grpcException;
+            }
+        }
     }
 
     /**
@@ -813,9 +842,7 @@ public abstract class AbstractBot {
      * @param maxTakeOffers  the max number of offers that can be taken during bot run
      */
     protected void maybeShutdownAfterSuccessfulTradeCreation(int numOffersTaken, int maxTakeOffers) {
-        log.info("Here are today's completed trades:");
-        printTradesSummaryForToday(CLOSED);
-
+        printTradesSummaryForTodayIfWalletIsUnlocked();
         if (!isDryRun) {
             // If the bot is not in dryrun mode, lock the wallet.  If dryrun=true, leave the wallet unlocked until the
             // timeout expires, so the user can look at data in the daemon with the CLI (a convenience in dev/test).
