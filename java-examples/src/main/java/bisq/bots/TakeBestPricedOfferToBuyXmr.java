@@ -76,7 +76,7 @@ import static protobuf.OfferDirection.SELL;
  * </pre>
  * If your API daemon is running on a local regtest network (with a trading peer), you can pass the
  * '--simulate-regtest-payment=true' option to the program to simulate the full trade protocol.  The bot will print
- * your regtest trading peer's CLI commands will be printed on the console, for you to copy/paste into another terminal.
+ * your regtest trading peer's CLI commands in the console, for you to copy/paste into another terminal.
  * <pre>
  *     TakeBestPricedOfferToBuyXmr  --password=api-password --port=api-port [--simulate-regtest-payment=true|false]
  * </pre>
@@ -343,9 +343,9 @@ public class TakeBestPricedOfferToBuyXmr extends AbstractBot {
                             : "N/A");
 
             if (offer.getUseMarketBasedPrice()) {
-                var marginPriceLabel = format("Is offer's price margin (%s%%) >= bot's min market price margin (%s%%)?",
-                        offer.getMarketPriceMarginPct(),
-                        minMarketPriceMargin);
+                var marginPriceLabel = format("Is offer's margin based price (%s) >= bot's target price (%s)?",
+                        offer.getPrice() + " BTC",
+                        targetPrice + " BTC");
                 filterResultsByLabel.put(marginPriceLabel, isMarginGEMinMarketPriceMargin.test(offer, minMarketPriceMargin));
             } else {
                 var fixedPriceLabel = format("Is offer's fixed-price (%s) >= bot's target price (%s)?",
