@@ -105,12 +105,11 @@ public class RegtestTradePaymentSimulator extends AbstractBot {
         closeTrade(tradeId);
         log.info("You closed the trade here in the bot (mandatory, to move trades to history list).");
 
-        log.warn("##############################################################################");
-        log.warn("Bob closes trade in the CLI (mandatory, to move trades to history list):");
-        String copyPasteCliCommands = "./bisq-cli --password=xyz --port=9999 closetrade --trade-id=" + trade.getTradeId()
+        String cliCommandDescription = "Trading peer inspects and closes trade in the CLI (mandatory, to move trades to history list):";
+        String copyPasteCliCommands = "./bisq-cli --password=xyz --port=9999 gettrade --trade-id=" + trade.getTradeId()
+                + "\n" + "./bisq-cli --password=xyz --port=9999 closetrade --trade-id=" + trade.getTradeId()
                 + "\n" + "./bisq-cli --password=xyz --port=9999 gettrades --category=closed";
-        log.warn(copyPasteCliCommands);
-        log.warn("##############################################################################");
+        printCliCommands(log, cliCommandDescription, copyPasteCliCommands);
 
         log.debug("Closing {}'s gRPC channel.", this.getClass().getSimpleName());
         super.grpcStubs.close();

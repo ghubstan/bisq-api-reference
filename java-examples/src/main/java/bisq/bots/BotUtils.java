@@ -552,7 +552,6 @@ public class BotUtils {
         log.warn(BANNER);
     }
 
-
     /**
      * Log a CLI gettrade command for a simulated trading peer.
      *
@@ -571,6 +570,23 @@ public class BotUtils {
                 tradingPeerApiPassword,
                 tradingPeerApiPort,
                 tradeId);
+        log.warn(BANNER);
+    }
+
+    /**
+     * Log 1 or more CLI commands for a simulated trading peer.
+     * Commands need to be separated by newlines to be legible.
+     *
+     * @param log         calling bot's logger
+     * @param description description of CLI commands
+     * @param commands    CLI commands separated by newlines.
+     */
+    public static void printCliCommands(Logger log,
+                                        String description,
+                                        String commands) {
+        log.warn(BANNER);
+        log.warn(description);
+        log.warn(commands);
         log.warn(BANNER);
     }
 
