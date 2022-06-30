@@ -593,11 +593,10 @@ public abstract class AbstractBot {
      */
     protected void printTradesSummaryForTodayIfWalletIsUnlocked() {
         try {
-            log.info("Here are today's completed trades:");
             printTradesSummaryForToday(CLOSED);
         } catch (StatusRuntimeException grpcException) {
             if (walletIsLocked(grpcException)) {
-                log.error("Cannot retrieve trades while API daemon's wallet is locked.");
+                log.error("Cannot show today's trades while API daemon's wallet is locked.");
             } else {
                 throw grpcException;
             }
@@ -614,7 +613,12 @@ public abstract class AbstractBot {
         var trades = getTrades(category).stream()
                 .filter(t -> t.getDate() >= midnightToday)
                 .collect(Collectors.toList());
-        BotUtils.printTradesSummary(category, trades);
+        if (trades.isEmpty()) {
+            log.info("No trades have been completed today.");
+        } else {
+            log.info("Here are today's completed trades:");
+            BotUtils.printTradesSummary(category, trades);
+        }
     }
 
     /**
@@ -805,7 +809,6 @@ public abstract class AbstractBot {
      * @param maxTakeOffers  the max number of offers that can be taken during bot run
      */
     protected void maybeShutdownAfterSuccessfulSwap(int numOffersTaken, int maxTakeOffers) {
-        log.info("Here are today's completed trades:");
         printTradesSummaryForToday(CLOSED);
 
         if (!isDryRun) {
