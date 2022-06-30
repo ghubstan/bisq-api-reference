@@ -552,6 +552,28 @@ public class BotUtils {
         log.warn(BANNER);
     }
 
+
+    /**
+     * Log a CLI gettrade command for a simulated trading peer.
+     *
+     * @param log                    calling bot's logger
+     * @param tradingPeerApiPassword trading peer's CLI --password param value
+     * @param tradingPeerApiPort     trading peer's CLI --port param value
+     * @param tradeId                trade's unique identifier (cannot be short-id)
+     */
+    public static void printCliGetTradeCommand(Logger log,
+                                               String tradingPeerApiPassword,
+                                               int tradingPeerApiPort,
+                                               String tradeId) {
+        log.warn(BANNER);
+        log.warn("Trading peer can view a trade with a gettrade CLI command:");
+        log.warn("./bisq-cli --password={} --port={} gettrade --trade-id={}",
+                tradingPeerApiPassword,
+                tradingPeerApiPort,
+                tradeId);
+        log.warn(BANNER);
+    }
+
     /**
      * Run a bash script to count down the given number of seconds, printing each character of output from stdout.
      * <p>
