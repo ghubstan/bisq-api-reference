@@ -32,10 +32,11 @@ import static java.math.RoundingMode.HALF_UP;
 import static protobuf.OfferDirection.BUY;
 
 /**
- * This bot's general use case is to buy XMR with BTC at a low BTC price.  It periodically checks the Sell XMR (Buy BTC)
- * market, and takes a configured maximum number of offers to sell you XMR according to criteria you define in the bot's
- * configuration file:  TakeBestPricedOfferToSellXmr.properties (located in project's src/main/resources directory).
- * You will need to replace the default values in the configuration file for your use cases.
+ * This bot's general use case is to buy XMR with your BTC at a low BTC price.  It periodically checks the
+ * Sell XMR (Buy BTC) market, and takes a configured maximum number of offers to sell you XMR according to criteria you
+ * define in the bot's configuration file:  <b>TakeBestPricedOfferToSellXmr.properties</b> (located in project's
+ * src/main/resources directory).  You will need to replace the default values in the configuration file for your
+ * use cases.
  * <p><br/>
  * After the maximum number of offers have been taken (good to start with 1), the bot will shut down the API daemon,
  * then itself.  You have to confirm the offer maker's XMR payment(s) outside Bisq, then complete the trade(s) in
@@ -220,8 +221,8 @@ public class TakeBestPricedOfferToSellXmr extends AbstractBot {
             } catch (StatusRuntimeException fatalException) {
                 shutdownAfterTakeOfferFailure(fatalException);
             }
-            maybeShutdownAfterSuccessfulTradeCreation(numOffersTaken, maxTakeOffers);
         }
+        maybeShutdownAfterSuccessfulTradeCreation(numOffersTaken, maxTakeOffers);
     }
 
     /**
@@ -239,6 +240,8 @@ public class TakeBestPricedOfferToSellXmr extends AbstractBot {
         configsByLabel.put("Bot OS:", getOSName() + " " + getOSVersion());
         var network = getNetwork();
         configsByLabel.put("BTC Network:", network);
+        configsByLabel.put("Dry Run?", isDryRun ? "YES" : "NO");
+        configsByLabel.put("Simulate Regtest Trade?", canSimulatePaymentSteps ? "YES" : "NO");
         configsByLabel.put("My Payment Account:", "");
         configsByLabel.put("\tPayment Account Id:", paymentAccount.getId());
         configsByLabel.put("\tAccount Name:", paymentAccount.getAccountName());
