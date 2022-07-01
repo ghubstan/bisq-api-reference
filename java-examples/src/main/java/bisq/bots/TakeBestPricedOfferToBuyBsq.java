@@ -32,7 +32,50 @@ import static java.math.RoundingMode.HALF_UP;
 import static protobuf.OfferDirection.SELL;
 
 /**
- * Bot for selling BSQ for BTC at an attractive (higher) price.  The bot sends BSQ for BTC.
+ * This bot's general use case is to sell your BSQ for BTC at a high BTC price.  It periodically checks the
+ * Buy BSQ (Sell BTC) market, and takes a configured maximum number of offers to buy BSQ from you according to criteria
+ * you define in the bot's configuration file:  <b>TakeBestPricedOfferToBuyBsq.properties</b> (located in project's
+ * src/main/resources directory).  You will need to replace the default values in the configuration file for your
+ * use cases.
+ * <p><br/>
+ * After the maximum number of BSQ swap offers have been taken (good to start with 1), the bot will shut down.  The API
+ * daemon will not be shut down because swaps do not require additional payment related steps taken outside Bisq, or
+ * in the GUI.
+ * <p>
+ * Here is one possible use case:
+ * <pre>
+ *      Take 1 BSQ swap offer to buy BSQ with BTC, priced no lower than 0.50% above the 30-day average BSQ price if:
+ *
+ *          the offer's BTC amount is between 0.10 and 0.25 BTC
+ *          the offer maker is one of two preferred trading peers
+ *          the current transaction mining fee rate is below 20 sats / byte
+ *
+ *  The bot configurations for these rules are set in TakeBestPricedOfferToBuyBsq.properties as follows:
+ *
+ *          maxTakeOffers=1
+ *          minMarketPriceMargin=0.50
+ *          minAmount=0.10
+ *          maxAmount=0.25
+ *          preferredTradingPeers=preferred-address-1.onion:9999,preferred-address-2.onion:9999
+ *          maxTxFeeRate=20
+ * </pre>
+ * <b>Usage</b>
+ * <p><br/>
+ * You must encrypt your wallet password before running this bot.  If it is not already encrypted, you can use the CLI:
+ * <pre>
+ *     $ ./bisq-cli --password=xyz --port=9998 setwalletpassword --wallet-password="be careful"
+ * </pre>
+ * There are some {@link bisq.bots.Config program options} common to all the Java bot examples, passed on the command
+ * line.  The only one you must provide (no default value) is your API daemon's password option:
+ * `--password <String>`.  The bot will prompt you for your wallet-password in the console.
+ * <p><br/>
+ * You can pass the '--dryrun=true' option to the program to see what offers your bot <i>would take</i> with a given
+ * configuration.  This will help you avoid taking offers by mistake.
+ * <pre>
+ *     TakeBestPricedOfferToBuyBsq  --password=api-password --port=api-port [--dryrun=true|false]
+ * </pre>
+ * <p>
+ * The '--simulate-regtest-payment=true' option is ignored by this bot.  Taking a swap triggers execution of the swap.
  */
 @Slf4j
 @Getter
@@ -99,7 +142,8 @@ public class TakeBestPricedOfferToBuyBsq extends AbstractBot {
                 continue;
             }
 
-            // Get all available and takeable offers, sorted by price descending.
+            // Get all available sell BTC for BSQ offers, sorted by price descending.
+            // The list contains only fixed-priced offers.
             var offers = getOffers(SELL.name(), CURRENCY_CODE).stream()
                     .filter(o -> !isAlreadyTaken.test(o))
                     .toList();
@@ -125,7 +169,6 @@ public class TakeBestPricedOfferToBuyBsq extends AbstractBot {
                         takeCriteria.printOfferAgainstCriteria(highestPricedOffer);
                     });
 
-            printDryRunProgress();
             runCountdown(log, pollingInterval);
             pingDaemon(startTime);
         }
@@ -134,17 +177,21 @@ public class TakeBestPricedOfferToBuyBsq extends AbstractBot {
     private void takeOffer(TakeCriteria takeCriteria, OfferInfo offer) {
         log.info("Will attempt to take offer '{}'.", offer.getId());
         takeCriteria.printOfferAgainstCriteria(offer);
+
+        // An encrypted wallet must be unlocked before calling takeoffer and gettrade(s).
+        // Unlock the wallet for 5 minutes.  If the wallet is already unlocked, this request
+        // will override the timeout of the previous unlock request.
+        try {
+            unlockWallet(walletPassword, 300);
+        } catch (NonFatalException nonFatalException) {
+            handleNonFatalException(nonFatalException, pollingInterval);
+        }
+
         if (isDryRun) {
             addToOffersTaken(offer);
             numOffersTaken++;
-            maybeShutdownAfterSuccessfulSwap(numOffersTaken, maxTakeOffers);
         } else {
-            // An encrypted wallet must be unlocked before calling takeoffer and gettrade.
-            // Unlock the wallet for 10 minutes.  If the wallet is already unlocked,
-            // this command will override the timeout of the previous unlock command.
             try {
-                unlockWallet(walletPassword, 600);
-
                 printBTCBalances("BTC Balances Before Swap Execution");
                 printBSQBalances("BSQ Balances Before Swap Execution");
 
@@ -155,13 +202,13 @@ public class TakeBestPricedOfferToBuyBsq extends AbstractBot {
                 printBSQBalances("BSQ Balances After Swap Execution");
 
                 numOffersTaken++;
-                maybeShutdownAfterSuccessfulSwap(numOffersTaken, maxTakeOffers);
             } catch (NonFatalException nonFatalException) {
                 handleNonFatalException(nonFatalException, pollingInterval);
             } catch (StatusRuntimeException fatalException) {
                 handleFatalBsqSwapException(fatalException);
             }
         }
+        maybeShutdownAfterSuccessfulSwap(numOffersTaken, maxTakeOffers);
     }
 
     private void printBotConfiguration() {
@@ -169,6 +216,7 @@ public class TakeBestPricedOfferToBuyBsq extends AbstractBot {
         configsByLabel.put("Bot OS:", getOSName() + " " + getOSVersion());
         var network = getNetwork();
         configsByLabel.put("BTC Network:", network);
+        configsByLabel.put("Dry Run?", isDryRun ? "YES" : "NO");
         var isMainnet = network.equalsIgnoreCase("mainnet");
         var mainnet30DayAvgBsqPrice = isMainnet ? get30DayAvgBsqPriceInBtc() : null;
         configsByLabel.put("My Payment Account:", "");
