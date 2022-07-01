@@ -48,7 +48,7 @@ import static protobuf.OfferDirection.SELL;
  *
  *          the offer's BTC amount is between 0.50 and 1.00 BTC
  *          the offer maker is one of two preferred trading peers
- *          the current transaction mining fee rate is below 20 sats / byte
+ *          the current transaction mining fee rate is less than or equal 20 sats / byte
  *
  *  The bot configurations for these rules are set in TakeBestPricedOfferToBuyXmr.properties as follows:
  *
