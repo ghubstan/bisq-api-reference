@@ -43,8 +43,6 @@ import static protobuf.OfferDirection.BUY;
  * the <a href="https://bisq.network">Bisq Desktop</a> application.
  * <p>
  * Here is one possible use case:
- *
- *
  * <pre>
  *      Take 3 "Faster Payment" offers to buy BTC with GBP, priced no lower than 2.00% above the current market
  *      price if:
@@ -64,7 +62,7 @@ import static protobuf.OfferDirection.BUY;
  * </pre>
  * <b>Usage</b>
  * <p><br/>
- * You must encrypt your wallet password before running this bot.  If it is not already, you can use the CLI:
+ * You must encrypt your wallet password before running this bot.  If it is not already encrypted, you can use the CLI:
  * <pre>
  *     $ ./bisq-cli --password=xyz --port=9998 setwalletpassword --wallet-password="be careful"
  * </pre>

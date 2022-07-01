@@ -61,7 +61,7 @@ import static protobuf.OfferDirection.BUY;
  * </pre>
  * <b>Usage</b>
  * <p><br/>
- * You must encrypt your wallet password before running this bot.  If it is not already, you can use the CLI:
+ * You must encrypt your wallet password before running this bot.  If it is not already encrypted, you can use the CLI:
  * <pre>
  *     $ ./bisq-cli --password=xyz --port=9998 setwalletpassword --wallet-password="be careful"
  * </pre>
