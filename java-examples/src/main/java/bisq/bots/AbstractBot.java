@@ -795,35 +795,30 @@ public abstract class AbstractBot {
     }
 
     /**
-     * Print the day's completed trades since midnight today, then:
+     * Print the day's completed trades since midnight today, and number of offers taken during the bot session, then,
      * <p>
-     * If numOffersTaken >= maxTakeOffers, and trade completion is being simulated on regtest, shut down the bot.
+     * If numOffersTaken >= maxTakeOffers, shut down the bot.
      * <p>
-     * If numOffersTaken >= maxTakeOffers, and mainnet trade completion must be delegated to the UI, shut down the
-     * API daemon and the bot.
-     * <p>
-     * If numOffersTaken < maxTakeOffers, just log the number of offers taken so far during the bot run.
-     * (Don't shut down anything.)
+     * If numOffersTaken < maxTakeOffers, log the number of offers taken so far during the bot run.
      *
      * @param numOffersTaken the number of offers taken during bot run
      * @param maxTakeOffers  the max number of offers that can be taken during bot run
      */
     protected void maybeShutdownAfterSuccessfulSwap(int numOffersTaken, int maxTakeOffers) {
-        printTradesSummaryForToday(CLOSED);
+        printTradesSummaryForTodayIfWalletIsUnlocked();
 
-        if (!isDryRun) {
-            try {
-                lockWallet();
-            } catch (NonFatalException ex) {
-                log.warn(ex.getMessage());
-            }
+        log.info("You {} have taken {} swap offer(s) during this bot's {}",
+                isDryRun ? "would" : "",
+                numOffersTaken,
+                isDryRun ? "dryrun:" : "session.");
+        if (isDryRun) {
+            printDryRunProgress();
         }
+
         if (numOffersTaken >= maxTakeOffers) {
             isShutdown = true;
             log.info("Shutting down API bot after executing {} BSQ swaps.", numOffersTaken);
             exit(0);
-        } else {
-            log.info("You have completed {} BSQ swap(s) during this bot session.", numOffersTaken);
         }
     }
 
