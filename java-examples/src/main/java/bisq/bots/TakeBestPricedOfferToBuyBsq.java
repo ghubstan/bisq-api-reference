@@ -334,7 +334,7 @@ public class TakeBestPricedOfferToBuyBsq extends AbstractBot {
                     iHavePreferredTradingPeers.get()
                             ? isMakerPreferredTradingPeer.test(offer) ? "YES" : "NO"
                             : "N/A");
-            var fixedPriceLabel = format("Is offer fixed-price (%s) >= bot's minimum price (%s)?",
+            var fixedPriceLabel = format("Is offer fixed-price (%s) >= bot's minimum price of (%s)?",
                     offer.getPrice() + " BTC",
                     targetPrice + " BTC");
             filterResultsByLabel.put(fixedPriceLabel, isFixedPriceGEMaxMarketPriceMargin.test(offer, avgBsqPrice));
