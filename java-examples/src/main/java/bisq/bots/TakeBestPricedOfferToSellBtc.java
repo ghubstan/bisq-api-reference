@@ -32,47 +32,54 @@ import static java.math.RoundingMode.HALF_UP;
 import static protobuf.OfferDirection.SELL;
 
 /**
- * The TakeBestPricedOfferToSellBtc bot waits for attractively priced SELL BTC offers to appear, takes the offers
- * (up to a maximum of configured {@link #maxTakeOffers}), then shuts down both the API daemon and itself (the bot),
- * to allow the user to start the desktop UI application and complete the trades.
+ * This bot's general use case is to buy BTC with fiat at a low fiat price.  It periodically checks the
+ * Sell BTC market, and takes a configured maximum number of offers to sell BTC to you according to criteria you
+ * define in the bot's configuration file:  <b>TakeBestPricedOfferToSellBtc.properties</b> (located in project's
+ * src/main/resources directory).  You will need to replace the default values in the configuration file for your
+ * use cases.
+ * <p><br/>
+ * After the maximum number of offers have been taken (good to start with 1), the bot will shut down the API daemon,
+ * then itself.  You have to send fiat payment(s) to the offer maker(s) outside Bisq, then complete the trade(s) in
+ * the <a href="https://bisq.network">Bisq Desktop</a> application.
  * <p>
- * The benefit this bot provides is freeing up the user time spent watching the offer book in the UI, waiting for the
- * right offer to take.  Low-priced offers are taken relatively quickly;  this bot increases the chance of beating
- * the other nodes at taking the offer.
- * <p>
- * The disadvantage is that if the user takes offers with the API, she must complete the trades with the desktop UI.
- * This problem is due to the inability of the API to fully automate every step of the trading protocol.  Sending fiat
- * payments, and confirming their receipt, are manual activities performed outside the Bisq daemon and desktop UI.
- * Also, the API and the desktop UI cannot run at the same time.  Care must be taken to shut down one before starting
- * the other.
- * <p>
- * The criteria for determining which offers to take are defined in the bot's configuration file
- * TakeBestPricedOfferToSellBtc.properties (located in project's src/main/resources directory).  The individual
- * configurations are commented in the existing TakeBestPricedOfferToSellBtc.properties, which should be used as a
- * template for your own use case.
- * <p>
- * One possible use case for this bot is buy BTC with GBP:
+ * Here is one possible use case:
  * <pre>
- *      Take a "Faster Payment (Santander)" offer to sell BTC for GBP at or below current market price if:
- *          the offer maker is a preferred trading peer,
- *          and the offer's BTC amount is between 0.10 and 0.25 BTC,
- *          and the current transaction mining fee rate is below 20 sats / byte.
+ *      Take 4 "Faster Payment" offers to sell BTC for GBP, priced no higher than 1.00% above the current market
+ *      price if:
+ *
+ *          the offer's BTC amount is between 0.10 and 0.25 BTC
+ *          the offer maker is one of two preferred trading peers
+ *          the current transaction mining fee rate is below 20 sats / byte
+ *
+ *  The bot configurations for these rules are set in TakeBestPricedOfferToSellBtc.properties as follows:
+ *
+ *          maxTakeOffers=4
+ *          minMarketPriceMargin=1.00
+ *          minAmount=0.10
+ *          maxAmount=0.25
+ *          preferredTradingPeers=preferred-address-1.onion:9999,preferred-address-2.onion:9999
+ *          maxTxFeeRate=20
  * </pre>
- * <p>
- * Another possible use case for this bot is to sell BTC for XMR.  (We might say "buy XMR with BTC", but we need to
- * remember that all Bisq offers are for buying or selling BTC.)
+ * <b>Usage</b>
+ * <p><br/>
+ * You must encrypt your wallet password before running this bot.  If it is not already encrypted, you can use the CLI:
  * <pre>
- *      Take an offer to sell BTC for XMR at or below current market price if:
- *          the offer maker is a preferred trading peer,
- *          and the offer's BTC amount is between 0.50 and 1.00 BTC,
- *          and the current transaction mining fee rate is below 15 sats / byte.
+ *     $ ./bisq-cli --password=xyz --port=9998 setwalletpassword --wallet-password="be careful"
  * </pre>
- * <p>
+ * There are some {@link bisq.bots.Config program options} common to all the Java bot examples, passed on the command
+ * line.  The only one you must provide (no default value) is your API daemon's password option:
+ * `--password <String>`.  The bot will prompt you for your wallet-password in the console.
+ * <p><br/>
+ * You can pass the '--dryrun=true' option to the program to see what offers your bot <i>would take</i> with a given
+ * configuration.  This will help you avoid taking offers by mistake.
  * <pre>
- * Usage:  TakeBestPricedOfferToSellBtc  --password=api-password --port=api-port \
- *                          [--conf=take-best-priced-offer-to-sell-btc.conf] \
- *                          [--dryrun=true|false]
- *                          [--simulate-regtest-payment=true|false]
+ *     TakeBestPricedOfferToBuyBtc  --password=api-password --port=api-port [--dryrun=true|false]
+ * </pre>
+ * If your API daemon is running on a local regtest network (with a trading peer), you can pass the
+ * '--simulate-regtest-payment=true' option to the program to simulate the full trade protocol.  The bot will print
+ * your regtest trading peer's CLI commands in the console, for you to copy/paste into another terminal.
+ * <pre>
+ *     TakeBestPricedOfferToBuyBtc  --password=api-password --port=api-port [--simulate-regtest-payment=true|false]
  * </pre>
  */
 @Slf4j
@@ -168,7 +175,6 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
                         takeCriteria.printOfferAgainstCriteria(cheapestOffer);
                     });
 
-            printDryRunProgress();
             runCountdown(log, pollingInterval);
             pingDaemon(startTime);
         }
@@ -182,16 +188,21 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
     private void takeOffer(TakeCriteria takeCriteria, OfferInfo offer) {
         log.info("Will attempt to take offer '{}'.", offer.getId());
         takeCriteria.printOfferAgainstCriteria(offer);
+
+        // An encrypted wallet must be unlocked before calling takeoffer and gettrade(s).
+        // Unlock the wallet for 5 minutes.  If the wallet is already unlocked, this request
+        // will override the timeout of the previous unlock request.
+        try {
+            unlockWallet(walletPassword, 300);
+        } catch (NonFatalException nonFatalException) {
+            handleNonFatalException(nonFatalException, pollingInterval);
+        }
+
         if (isDryRun) {
             addToOffersTaken(offer);
             numOffersTaken++;
-            maybeShutdownAfterSuccessfulTradeCreation(numOffersTaken, maxTakeOffers);
         } else {
-            // An encrypted wallet must be unlocked before calling takeoffer and gettrade.
-            // Unlock the wallet for 5 minutes.  If the wallet is already unlocked,
-            // this command will override the timeout of the previous unlock command.
             try {
-                unlockWallet(walletPassword, 600);
                 printBTCBalances("BTC Balances Before Take Offer Attempt");
                 // Blocks until new trade is prepared, or times out.
                 takeV1ProtocolOffer(offer, paymentAccount, bisqTradeFeeCurrency, pollingInterval);
@@ -206,13 +217,13 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
                     printBTCBalances("BTC Balances After Simulated Trade Completion");
                 }
                 numOffersTaken++;
-                maybeShutdownAfterSuccessfulTradeCreation(numOffersTaken, maxTakeOffers);
             } catch (NonFatalException nonFatalException) {
                 handleNonFatalException(nonFatalException, pollingInterval);
             } catch (StatusRuntimeException fatalException) {
                 shutdownAfterTakeOfferFailure(fatalException);
             }
         }
+        maybeShutdownAfterSuccessfulTradeCreation(numOffersTaken, maxTakeOffers);
     }
 
     /**
@@ -230,6 +241,8 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
         configsByLabel.put("Bot OS:", getOSName() + " " + getOSVersion());
         var network = getNetwork();
         configsByLabel.put("BTC Network:", network);
+        configsByLabel.put("Dry Run?", isDryRun ? "YES" : "NO");
+        configsByLabel.put("Simulate Regtest Trade?", canSimulatePaymentSteps ? "YES" : "NO");
         configsByLabel.put("My Payment Account:", "");
         configsByLabel.put("\tPayment Account Id:", paymentAccount.getId());
         configsByLabel.put("\tAccount Name:", paymentAccount.getAccountName());
@@ -334,9 +347,9 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
                             : "N/A");
 
             if (offer.getUseMarketBasedPrice()) {
-                var marginPriceLabel = format("Is offer's price margin (%s%%) <= bot's max market price margin (%s%%)?",
-                        offer.getMarketPriceMarginPct(),
-                        maxMarketPriceMargin);
+                var marginPriceLabel = format("Is offer's margin based price (%s) <= bot's target price (%s)?",
+                        offer.getPrice() + " " + currencyCode,
+                        targetPrice + " " + currencyCode);
                 filterResultsByLabel.put(marginPriceLabel, isMarginLEMaxMarketPriceMargin.test(offer, maxMarketPriceMargin));
             } else {
                 var fixedPriceLabel = format("Is offer's fixed-price (%s) <= bot's target price (%s)?",
