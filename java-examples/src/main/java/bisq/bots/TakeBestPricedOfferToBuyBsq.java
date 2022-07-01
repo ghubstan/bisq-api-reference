@@ -76,6 +76,8 @@ import static protobuf.OfferDirection.SELL;
  * </pre>
  * <p>
  * The '--simulate-regtest-payment=true' option is ignored by this bot.  Taking a swap triggers execution of the swap.
+ *
+ * @see <a href="https://github.com/bisq-network/bisq-api-reference/blob/make-proto-downloader-runnable-from-any-dir/java-examples/src/main/java/bisq/bots/Config.java">bisq.bots.Config.java</a>
  */
 @Slf4j
 @Getter

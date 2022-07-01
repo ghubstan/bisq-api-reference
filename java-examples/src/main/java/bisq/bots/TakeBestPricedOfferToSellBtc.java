@@ -81,6 +81,8 @@ import static protobuf.OfferDirection.SELL;
  * <pre>
  *     TakeBestPricedOfferToBuyBtc  --password=api-password --port=api-port [--simulate-regtest-payment=true|false]
  * </pre>
+ *
+ * @see <a href="https://github.com/bisq-network/bisq-api-reference/blob/make-proto-downloader-runnable-from-any-dir/java-examples/src/main/java/bisq/bots/Config.java">bisq.bots.Config.java</a>
  */
 @Slf4j
 @Getter
