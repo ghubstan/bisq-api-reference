@@ -807,8 +807,8 @@ public abstract class AbstractBot {
     protected void maybeShutdownAfterSuccessfulSwap(int numOffersTaken, int maxTakeOffers) {
         printTradesSummaryForTodayIfWalletIsUnlocked();
 
-        log.info("You {} have taken {} swap offer(s) during this bot's {}",
-                isDryRun ? "would" : "",
+        log.info("You {}have taken {} swap offer(s) during this bot's {}",
+                isDryRun ? "would " : "",
                 numOffersTaken,
                 isDryRun ? "dryrun:" : "session.");
         if (isDryRun) {
