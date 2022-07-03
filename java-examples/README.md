@@ -13,7 +13,7 @@ This subproject contains:
 * A [Gradle build file](https://github.com/bisq-network/bisq-api-reference/blob/main/java-examples/build.gradle)
   that could be used as a template for your own Java API bot project.
 
-## Risks, Warnings and Flaws
+## [Risks, Warnings and Flaws](#risks-warnings-and-flaws)
 
 ### Never Run API Daemon and [Bisq GUI](https://bisq.network) On Same Host At Same Time
 
@@ -43,7 +43,7 @@ experienced Java coders (and be easily portable to other [gRPC supported languag
 For non-developers, splitting up a one-size-fits-all TakeBestPricedOffer also makes them easier to configure for various
 BTC/Fiat, XMR/BTC, and BSQ/BTC market use cases.
 
-## Generating Protobuf Code
+## [Generating Protobuf Code](#generating-protobuf-code)
 
 ### Download IDL (.proto) Files From The [Bisq Repo](https://github.com/bisq-network/bisq)
 
@@ -71,7 +71,7 @@ In a terminal:
 $ cd java-examples $ ./gradlew clean build
 ```
 
-## Java API Method Examples
+## [Java API Method Examples](#java-api-method-examples)
 
 Each class in
 the [bisq.rpccalls](https://github.com/bisq-network/bisq-api-reference/tree/main/java-examples/src/main/java/bisq/rpccalls)
@@ -88,19 +88,17 @@ examples know nothing about real Payment Account IDs, Offer IDs, etc. To run the
 example, your will need to change the hard-coded offer ID to a real offer ID to avoid a "not found" gRPC 
 StatusRuntimeException from the API daemon.
 
-## Java API Bots
+## [Java API Bots](#java-api-bots)
 
 ### Purpose
 
 The Java API bots in this project are meant to be run on mainnet, provide a base for more complex bots, and guide you
 in developing your own bots.
 
-### Run on mainnet at your own risk!
-
-You need to understand a bot's code and its configuration before trying it on mainnet. While you get familiar with a bot
-example, you can run it in **dryrun** mode to see how it behaves with different configurations (more later). Even
-better:  run it while your Bisq API daemons (seednode, arbitration-node, and a trading peer) are connected to a local
-BTC regtest network.
+Put some effort into understanding a bot's code and its configuration before trying it on mainnet. While you get 
+familiar with a bot example, you can run it in **dryrun** mode to see how it behaves with different configurations 
+(more later). Even better:  run it while your Bisq API daemons (seednode, arbitration-node, and a trading peer) are 
+connected to a local BTC regtest network. 
 The [API test harness](https://github.com/bisq-network/bisq/blob/master/apitest/docs/api-beta-test-guide.md) is
 convenient for this.
 
@@ -116,26 +114,22 @@ Before you try the test harness, make sure your host is not running any bitcoind
 Clone the Bisq master branch to your host, build and start it:
 
 ```asciidoc
-#Clone Bisq source repo.
+# Clone Bisq source repo.
 $ git clone https://github.com/bisq-network/bisq.git [some folder]
 $ cd [some folder]
 
-#Build Bisq source, install DAO/Regtest wallet files.
+# Build Bisq source, install DAO/Regtest wallet files (with coins).
 $ ./gradlew clean build :apitest:installDaoSetup -x test
 
-#Start local bitcoind (regtest) node and headless test harness nodes.
+# Start local bitcoind (regtest) node and headless test harness nodes.
 $ ./bisq-apitest --apiPassword=xyz --supportingApps=bitcoind,seednode,arbdaemon,alicedaemon,bobdaemon --shutdownAfterTests=false
 ```
 
 To shut down the test harness, enter **^C**.
 
-#### Creating And Using Runnable Bot Jars
-
-TODO (more later)
-
 ### Take BSQ / BTC / XMR / Offer Bots
 
-There are four bots for taking offers:
+There are six bots for taking offers:
 
 * [TakeBestPricedOfferToBuyBsq (From You)](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToBuyBsq.java)
 * [TakeBestPricedOfferToSellBsq (To You)](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToSellBsq.java)
@@ -146,11 +140,23 @@ There are four bots for taking offers:
 * [TakeBestPricedOfferToBuyXmr (From You)](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToBuyXmr.java)
 * [TakeBestPricedOfferToSellXmr (To You)](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToSellXmr.java)
 
-The **Take Buy/Sell BTC** bots take 1 or more offers for a given criteria as defined in each bot's configuration file
-(more later). After the configured maximum number of offers have been taken, the bot shuts down the API daemon and
-itself because trade payments are made outside Bisq. The Bisq API *cannot automate the fiat or XMR trade payment and
-receipt confirmation steps of the protocol*. When an offer is taken by the API, the trade payment steps of the protocol
-must be performed in the UI.
+The **Take Buy/Sell BTC and XMR Offer** bots take 1 or more offers for a given criteria as defined in each bot's 
+configuration file (more later). After the configured maximum number of offers have been taken, the bot shuts down 
+the API daemon and itself because trade payments are made outside Bisq.  Bisq nodes (UI or API) do not communicate
+with your banks and XMR wallets, and *cannot automate fiat and XMR trade payments and deposit confirmations*.
+
+The Bisq trade payment protocol steps of the Bisq protocol can be performed in the UI, or you can finish the trade with 
+an API daemon and manual CLI commands:
+```asciidoc
+# If you are a BTC buyer, notify peer you have initiated fiat or XMR payment.
+$ ./bisq-cli --password=xyz --port=9998 confirmpaymentstarted --trade-id=<trade-id>
+
+# If you are a BTC seller, notify peer your have received fiat or XMR payment.
+$ ./bisq-cli --password=xyz --port=9998 confirmpaymentreceived --trade-id=<trade-d>
+
+# Close your completed trade (move it to your trade history).  
+$ ./bisq-cli --password=xyz --port=9998 closetrade --trade-id=<trade-id>
+```
 
 The **Take Buy/Sell BSQ** bots take 1 or more offers for a given criteria as defined in each bot's configuration file
 (more later). After the configured maximum number of offers have been taken, the bot shuts down itself, but not the API
@@ -170,8 +176,8 @@ nodes at taking the offer.
 
 The disadvantage is that if the user takes offers with the API, she must complete the trades with the desktop UI. This
 problem is due to the inability of the API to fully automate every step of the trading protocol. Sending fiat or XMR
-payments, and confirming their receipt, are manual activities performed outside the Bisq daemon and desktop UI. Also,
-the API and the desktop UI cannot run at the same time. Care must be taken to shut down one before starting the other.
+payments, and confirming their receipt, are manual activities performed outside the Bisq daemon and desktop UI.  When you
+switch back and forth between the API daemon and UI, be careful not to let them run at the same time.
 
 The criteria for determining which offers to take are defined in the bot's configuration file
 TakeBestPricedOfferToSellBtc.properties (located in project's src/main/resources directory). The individual
@@ -187,7 +193,7 @@ GBP at or below the current market GBP price if:
 * the offer's BTC amount is between 0.10 and 0.25 BTC
 * the current transaction mining fee rate is less than or equal 20 sats / byte
 
-**Class Doc Link**
+**Usage**
 
 **Configuration**
 
@@ -196,13 +202,56 @@ GBP at or below the current market GBP price if:
 * Param 3
 * ...
 
-**Usage**
+**Creating And Using Runnable TakeBestPricedOfferToSellBtc Jar**
 
+To create the runnable jar, see [Creating Runnable Jars](#creating-runnable-jars).
+
+To run the jar, edit the conf file for your use case, and run it:
 ```asciidoc
-$ java -jar x.jar --password=xyz --conf=[path.conf] --dryrun=true
+$ java -jar take-best-priced-offer-to-buy-btc.jar \
+    --password=xyz \
+    --dryrun=false \
+    --conf=take-best-priced-offer-to-buy-btc.conf 
 ```
 
-## Gradle Build File
+### [Creating Runnable Jars](#creating-runnable-jars)
+
+You can create runnable jars for these bots and run them in a terminal.  After building the java-examples project, run
+the script **java-examples/scripts/create-bot-jars.sh**.  You can run the jar from the
+**java-examples/scripts/java-examples** folder created by the script, or copy that folder where you like and run it
+from there.
+
+Here are the steps to create runnable bot jars.
+```asciidoc
+# Build the java-examples project.
+$ cd java-examples
+$ ./gradlew clean build
+
+# Build the runnable bot jars.  Each jar contains one class, with its dependencies defined in its MANIFEST.MF.
+$ scripts/create-bot-jars.sh
+```
+
+Each jar has its own conf file, generated from the bot source code's properties file.  For example,
+
+* take-best-priced-offer-to-buy-btc.jar 
+* take-best-priced-offer-to-buy-btc.conf
+
+are created from
+* TakeBestPricedOfferToBuyBtc.java 
+* TakeBestPricedOfferToBuyBtc.properties
+
+To run it, edit the conf file for your use case and run a java -jar command:
+
+```asciidoc
+$ java -jar take-best-priced-offer-to-buy-btc.jar \
+    --password=xyz \
+    --dryrun=false \
+    --conf=take-best-priced-offer-to-buy-btc.conf 
+```
+
+You can rename a conf file as you like, and save several copies for specific use cases.
+
+## [Gradle Build File](#gradle-build-file)
 
 This
 project's [Gradle build file](https://github.com/bisq-network/bisq-api-reference/blob/main/java-examples/build.gradle),
