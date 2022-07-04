@@ -53,7 +53,7 @@ import static protobuf.OfferDirection.BUY;
  *  The bot configurations for these rules are set in TakeBestPricedOfferToSellBsq.properties as follows:
  *
  *          maxTakeOffers=5
- *          minMarketPriceMargin=-1.00
+ *          maxMarketPriceMargin=-1.00
  *          minAmount=0.10
  *          maxAmount=0.25
  *          preferredTradingPeers=preferred-address-1.onion:9999,preferred-address-2.onion:9999
