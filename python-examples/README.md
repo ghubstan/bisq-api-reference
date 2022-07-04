@@ -8,7 +8,7 @@ is named for the RPC method call being demonstrated.
 
 The [bisq.bots](https://github.com/bisq-network/bisq-api-reference/tree/main/python-examples/bisq/rpccalls) package
 contains some simple bots. Please do not run the Python bot examples on mainnet.
-See [warning](#bot-not-ready-for-mainnet).
+See [warning](#do-not-run-python-bot-examples-on-mainnet).
 
 The `run-setup.sh` script in this directory can install Python3 dependencies and example packages into a local venv.
 
@@ -27,7 +27,7 @@ high-throughput, high-performance system supporting atomic transactions. Care mu
 slow wallet updates on your disk, and Tor network latency. The API daemon enforces limits on request frequency via call
 rate metering, but you cannot assume bots can perform tasks as rapidly as the API daemon's call rate meters allow.
 
-### [Do Not Run Python Bot Examples On Mainnet](#bot-not-ready-for-mainnet)
+### [Do Not Run Python Bot Examples On Mainnet](#do-not-run-python-bot-examples-on-mainnet)
 
 The scripts in the [bisq.bots](https://github.com/bisq-network/bisq-api-reference/tree/main/python-examples/bisq/bots)
 package should not be run on mainnet. They do not properly handle errors, and were written by a Python noob.
