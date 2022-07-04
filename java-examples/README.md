@@ -135,7 +135,6 @@ There are six bots for taking offers:
 * [Take Best Priced Offer To Buy Btc](#take-best-priced-offer-to-buy-btc)
 * [Take Best Priced Offer To Sell Btc](#take-best-priced-offer-to-sell-btc)
 
-
 * [Take Best Priced Offer To Buy Bsq](#take-best-priced-offer-to-buy-bsq)
 * [Take Best Priced Offer To Sell Bsq](#take-best-priced-offer-to-sell-bsq)
 
@@ -189,16 +188,16 @@ This information is found in
 the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToBuyBtc.java)
 .
 
-**Creating And Using Runnable TakeBestPricedOfferToSellBtc Jar**
+**Creating And Using Runnable TakeBestPricedOfferToBuyBtc Jar**
 
 To create a runnable jar, see [Creating Runnable Jars](#creating-runnable-jars). To run the jar, edit the conf file for
 your use case, and use the java -jar command:
 
 ```asciidoc
-$ java -jar take-best-priced-offer-to-sell-btc.jar \
+$ java -jar take-best-priced-offer-to-buy-btc.jar \
     --password=xyz \
     --dryrun=false \
-    --conf=take-best-priced-offer-to-sell-btc.conf 
+    --conf=take-best-priced-offer-to-buy-btc.conf 
 ```
 
 ### [Take Best Priced Offer To Sell Btc](#take-best-priced-offer-to-sell-btc)
@@ -231,14 +230,23 @@ To create a runnable jar, see [Creating Runnable Jars](#creating-runnable-jars).
 your use case, and use the java -jar command:
 
 ```asciidoc
-$ java -jar take-best-priced-offer-to-buy-btc.jar \
+$ java -jar take-best-priced-offer-to-sell-btc.jar \
     --password=xyz \
     --dryrun=false \
-    --conf=take-best-priced-offer-to-buy-btc.conf 
+    --conf=take-best-priced-offer-to-sell-btc.conf 
 ```
 
-
 ### [Take Best Priced Offer To Buy Bsq](#take-best-priced-offer-to-buy-bsq)
+
+**Purpose (Sell High)**
+
+This bot waits for attractively priced BUY BSQ (with BTC) offers to appear, and takes 1 or more of them according to
+the bot's configuration. The bot will consider only those offers created with the same payment method associated with
+your bot's configured payment account id.
+
+**Warning**
+
+Take special care to not run the Bisq API daemon and the desktop application at the same time on the same host.
 
 **Use Cases, Usage and Configuration**
 
@@ -246,7 +254,29 @@ This information is found in
 the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToBuyBsq.java)
 .
 
+**Creating And Using Runnable TakeBestPricedOfferToBuyBsq Jar**
+
+To create a runnable jar, see [Creating Runnable Jars](#creating-runnable-jars). To run the jar, edit the conf file for
+your use case, and use the java -jar command:
+
+```asciidoc
+$ java -jar take-best-priced-offer-to-buy-bsq.jar \
+    --password=xyz \
+    --dryrun=false \
+    --conf=take-best-priced-offer-to-buy-bsq.conf 
+```
+
 ### [Take Best Priced Offer To Sell Bsq](#take-best-priced-offer-to-sell-bsq)
+
+**Purpose (Buy Low)**
+
+This bot waits for attractively priced SELL BSQ (for BTC) offers to appear, and takes 1 or more of them according to
+the bot's configuration. The bot will consider only those offers created with the same payment method associated with
+your bot's configured payment account id.
+
+**Warning**
+
+Take special care to not run the Bisq API daemon and the desktop application at the same time on the same host.
 
 **Use Cases, Usage and Configuration**
 
@@ -254,7 +284,29 @@ This information is found in
 the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToSellBsq.java)
 .
 
+**Creating And Using Runnable TakeBestPricedOfferToSellBsq Jar**
+
+To create a runnable jar, see [Creating Runnable Jars](#creating-runnable-jars). To run the jar, edit the conf file for
+your use case, and use the java -jar command:
+
+```asciidoc
+$ java -jar take-best-priced-offer-to-sell-bsq.jar \
+    --password=xyz \
+    --dryrun=false \
+    --conf=take-best-priced-offer-to-sell-bsq.conf 
+```
+
 ### [Take Best Priced Offer To Buy Xmr](#take-best-priced-offer-to-buy-xmr)
+
+**Purpose (Sell High)**
+
+This bot waits for attractively priced BUY XMR (with BTC) offers to appear, and takes 1 or more of them according to
+the bot's configuration. The bot will consider only those offers created with the same payment method associated with
+your bot's configured payment account id.
+
+**Warning**
+
+Take special care to not run the Bisq API daemon and the desktop application at the same time on the same host.
 
 **Use Cases, Usage and Configuration**
 
@@ -262,7 +314,29 @@ This information is found in
 the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToBuyXmr.java)
 .
 
+**Creating And Using Runnable TakeBestPricedOfferToBuyXmr Jar**
+
+To create a runnable jar, see [Creating Runnable Jars](#creating-runnable-jars). To run the jar, edit the conf file for
+your use case, and use the java -jar command:
+
+```asciidoc
+$ java -jar take-best-priced-offer-to-buy-xmr.jar \
+    --password=xyz \
+    --dryrun=false \
+    --conf=take-best-priced-offer-to-buy-xmr.conf 
+```
+
 ### [Take Best Priced Offer To Sell Xmr](#take-best-priced-offer-to-sell-xmr)
+
+**Purpose (Buy Low)**
+
+This bot waits for attractively priced SELL XMR (for BTC) offers to appear, and takes 1 or more of them according to
+the bot's configuration. The bot will consider only those offers created with the same payment method associated with
+your bot's configured payment account id.
+
+**Warning**
+
+Take special care to not run the Bisq API daemon and the desktop application at the same time on the same host.
 
 **Use Cases, Usage and Configuration**
 
@@ -270,7 +344,17 @@ This information is found in
 the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToSellXmr.java)
 .
 
+**Creating And Using Runnable TakeBestPricedOfferToSellXmr Jar**
 
+To create a runnable jar, see [Creating Runnable Jars](#creating-runnable-jars). To run the jar, edit the conf file for
+your use case, and use the java -jar command:
+
+```asciidoc
+$ java -jar take-best-priced-offer-to-sell-xmr.jar \
+    --password=xyz \
+    --dryrun=false \
+    --conf=take-best-priced-offer-to-sell-xmr.conf 
+```
 
 ### [Creating Runnable Jars](#creating-runnable-jars)
 
