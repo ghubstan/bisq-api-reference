@@ -167,7 +167,7 @@ BSQ Swap offer.
 
 ### [Take Best Priced Offer To Buy Btc](#take-best-priced-offer-to-buy-btc)
 
-**Purpose (Sell High)**
+**Purpose:**  Sell your BTC at a higher fiat price
 
 This bot waits for attractively priced BUY BTC (with fiat) offers to appear, and takes 1 or more of them according to
 the bot's configuration. The bot will consider only those offers created with the same payment method associated with
@@ -202,7 +202,7 @@ $ java -jar take-best-priced-offer-to-buy-btc.jar \
 
 ### [Take Best Priced Offer To Sell Btc](#take-best-priced-offer-to-sell-btc)
 
-**Purpose (Buy Low)**
+**Purpose:**  Buy BTC at a lower fiat price
 
 This bot waits for attractively priced SELL BTC (for fiat) offers to appear, and takes 1 or more of them according to
 the bot's configuration. The bot will consider only those offers created with the same payment method associated with
@@ -238,7 +238,7 @@ $ java -jar take-best-priced-offer-to-sell-btc.jar \
 
 ### [Take Best Priced Offer To Buy Bsq](#take-best-priced-offer-to-buy-bsq)
 
-**Purpose (Sell High)**
+**Purpose:**  Sell your BSQ at a higher BTC price
 
 This bot waits for attractively priced BUY BSQ (with BTC) offers to appear, and takes 1 or more of them according to
 the bot's configuration. The bot will consider only those offers created with the same payment method associated with
@@ -268,7 +268,7 @@ $ java -jar take-best-priced-offer-to-buy-bsq.jar \
 
 ### [Take Best Priced Offer To Sell Bsq](#take-best-priced-offer-to-sell-bsq)
 
-**Purpose (Buy Low)**
+**Purpose:**  Buy BSQ at a lower BTC price
 
 This bot waits for attractively priced SELL BSQ (for BTC) offers to appear, and takes 1 or more of them according to
 the bot's configuration. The bot will consider only those offers created with the same payment method associated with
@@ -298,7 +298,7 @@ $ java -jar take-best-priced-offer-to-sell-bsq.jar \
 
 ### [Take Best Priced Offer To Buy Xmr](#take-best-priced-offer-to-buy-xmr)
 
-**Purpose (Sell High)**
+**Purpose:**  Sell your XMR at a higher BTC price
 
 This bot waits for attractively priced BUY XMR (with BTC) offers to appear, and takes 1 or more of them according to
 the bot's configuration. The bot will consider only those offers created with the same payment method associated with
@@ -328,7 +328,7 @@ $ java -jar take-best-priced-offer-to-buy-xmr.jar \
 
 ### [Take Best Priced Offer To Sell Xmr](#take-best-priced-offer-to-sell-xmr)
 
-**Purpose (Buy Low)**
+**Purpose:**  Buy XMR at a lower BTC price
 
 This bot waits for attractively priced SELL XMR (for BTC) offers to appear, and takes 1 or more of them according to
 the bot's configuration. The bot will consider only those offers created with the same payment method associated with
