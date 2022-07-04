@@ -132,14 +132,15 @@ To shut down the test harness, enter **^C**.
 
 There are six bots for taking offers:
 
-* [TakeBestPricedOfferToBuyBtc](#take-best-priced-offer-to-buy-btc)
-* [TakeBestPricedOfferToSellBtc](#take-best-priced-offer-to-sell-btc)
+* [Take Best Priced Offer To Buy Btc](#take-best-priced-offer-to-buy-btc)
+* [Take Best Priced Offer To Sell Btc](#take-best-priced-offer-to-sell-btc)
 
-* [TakeBestPricedOfferToBuyBsq (From You)](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToBuyBsq.java)
-* [TakeBestPricedOfferToSellBsq (To You)](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToSellBsq.java)
 
-* [TakeBestPricedOfferToBuyXmr (From You)](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToBuyXmr.java)
-* [TakeBestPricedOfferToSellXmr (To You)](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToSellXmr.java)
+* [Take Best Priced Offer To Buy Bsq](#take-best-priced-offer-to-buy-bsq)
+* [Take Best Priced Offer To Sell Bsq](#take-best-priced-offer-to-sell-bsq)
+
+* [Take Best Priced Offer To Buy Xmr](#take-best-priced-offer-to-buy-xmr)
+* [Take Best Priced Offer To Sell Xmr](#take-best-priced-offer-to-sell-xmr)
 
 The **Take Buy/Sell BTC and XMR Offer** bots take 1 or more offers for a given criteria as defined in each bot's
 configuration file (more later). After the configured maximum number of offers have been taken, the bot shuts down the
@@ -165,7 +166,7 @@ The **Take Buy/Sell BSQ** bots take 1 or more offers for a given criteria as def
 daemon. BSQ Swaps can be fully automated by the API because the swap transaction is completed within seconds of taking a
 BSQ Swap offer.
 
-### [TakeBestPricedOfferToBuyBtc (From You)](#take-best-priced-offer-to-buy-btc)
+### [Take Best Priced Offer To Buy Btc](#take-best-priced-offer-to-buy-btc)
 
 **Purpose (Sell High)**
 
@@ -200,7 +201,7 @@ $ java -jar take-best-priced-offer-to-sell-btc.jar \
     --conf=take-best-priced-offer-to-sell-btc.conf 
 ```
 
-### [TakeBestPricedOfferToSellBtc (To You)](#take-best-priced-offer-to-sell-btc)
+### [Take Best Priced Offer To Sell Btc](#take-best-priced-offer-to-sell-btc)
 
 **Purpose (Buy Low)**
 
@@ -236,6 +237,41 @@ $ java -jar take-best-priced-offer-to-buy-btc.jar \
     --conf=take-best-priced-offer-to-buy-btc.conf 
 ```
 
+
+### [Take Best Priced Offer To Buy Bsq](#take-best-priced-offer-to-buy-bsq)
+
+**Use Cases, Usage and Configuration**
+
+This information is found in
+the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToBuyBsq.java)
+.
+
+### [Take Best Priced Offer To Sell Bsq](#take-best-priced-offer-to-sell-bsq)
+
+**Use Cases, Usage and Configuration**
+
+This information is found in
+the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToSellBsq.java)
+.
+
+### [Take Best Priced Offer To Buy Xmr](#take-best-priced-offer-to-buy-xmr)
+
+**Use Cases, Usage and Configuration**
+
+This information is found in
+the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToBuyXmr.java)
+.
+
+### [Take Best Priced Offer To Sell Xmr](#take-best-priced-offer-to-sell-xmr)
+
+**Use Cases, Usage and Configuration**
+
+This information is found in
+the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToSellXmr.java)
+.
+
+
+
 ### [Creating Runnable Jars](#creating-runnable-jars)
 
 You can create runnable jars for these bots and run them in a terminal. After building the java-examples project, run
@@ -267,7 +303,10 @@ are created from
 To run it, edit the conf file for your use case and run a java -jar command:
 
 ```asciidoc
-$ java -jar take-best-priced-offer-to-sell-btc.jar \ --password=xyz \ --dryrun=false \ --conf=take-best-priced-offer-to-sell-btc.conf 
+$ java -jar take-best-priced-offer-to-sell-btc.jar \
+    --password=xyz \
+    --dryrun=false \
+    --conf=take-best-priced-offer-to-sell-btc.conf 
 ```
 
 You can rename a conf file as you like, and save several copies for specific use cases.
