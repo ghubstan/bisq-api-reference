@@ -42,6 +42,7 @@ import static java.lang.String.format;
 import static java.lang.System.*;
 import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.HALF_UP;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Convenience methods and functions not depending on a bot's state nor the need to send requests to the API daemon.
@@ -153,6 +154,13 @@ public class BotUtils {
                     && new BigDecimal(offer.getPrice()).compareTo(targetPrice) >= 0;
 
     /**
+     * Return true if the margin price based offer's market price margin (%) >= minxMarketPriceMargin (%).
+     */
+    public static final BiPredicate<OfferInfo, BigDecimal> isMarginGEMinMarketPriceMargin =
+            (offer, minMarketPriceMargin) -> offer.getUseMarketBasedPrice()
+                    && offer.getMarketPriceMarginPct() >= minMarketPriceMargin.doubleValue();
+
+    /**
      * Return true if the margin price based offer's market price margin (%) <= maxMarketPriceMargin (%).
      */
     public static final BiPredicate<OfferInfo, BigDecimal> isMarginLEMaxMarketPriceMargin =
@@ -198,9 +206,15 @@ public class BotUtils {
     }
 
     /**
+     * Return String "above" if minMarketPriceMargin (%) >= 0.00, else "below".
+     */
+    public static final Function<BigDecimal, String> aboveOrBelowMinMarketPriceMargin = (minMarketPriceMargin) ->
+            minMarketPriceMargin.compareTo(ZERO) >= 0 ? "above" : "below";
+
+    /**
      * Return String "below" if maxMarketPriceMargin (%) <= 0.00, else "above".
      */
-    public static final Function<BigDecimal, String> aboveOrBelowMarketPrice = (maxMarketPriceMargin) ->
+    public static final Function<BigDecimal, String> aboveOrBelowMaxMarketPriceMargin = (maxMarketPriceMargin) ->
             maxMarketPriceMargin.compareTo(ZERO) <= 0 ? "below" : "above";
 
     /**
@@ -268,6 +282,12 @@ public class BotUtils {
         var unvalidatedWalletPassword = readWalletPassword(walletPasswordPrompt);
         return appendWalletPasswordOpt(args, unvalidatedWalletPassword);
     };
+
+    /**
+     * Return true if the '--wallet-password' option label if found in the given program args array.
+     */
+    public static final Predicate<String[]> hasWalletPasswordOpt = (args) ->
+            Arrays.stream(args).anyMatch(a -> a.contains("--wallet-password"));
 
     /**
      * Return a wallet password read from stdin.  If read from a command terminal, input will not be echoed.
@@ -388,6 +408,7 @@ public class BotUtils {
      * @param offer printed offer
      */
     public static void printOfferSummary(OfferInfo offer) {
+        requireNonNull(offer, "OfferInfo offer param cannot be null.");
         new TableBuilder(OFFER_TBL, offer).build().print(out);
     }
 
@@ -397,7 +418,12 @@ public class BotUtils {
      * @param offers printed offer list
      */
     public static void printOffersSummary(List<OfferInfo> offers) {
-        new TableBuilder(OFFER_TBL, offers).build().print(out);
+        requireNonNull(offers, "List<OfferInfo> offers param cannot be null.");
+        if (offers.isEmpty()) {
+            log.info("No offers to print.");
+        } else {
+            new TableBuilder(OFFER_TBL, offers).build().print(out);
+        }
     }
 
     /**
@@ -406,6 +432,7 @@ public class BotUtils {
      * @param trade printed trade
      */
     public static void printTradeSummary(TradeInfo trade) {
+        requireNonNull(trade, "TradeInfo trade param cannot be null.");
         new TableBuilder(TRADE_DETAIL_TBL, trade).build().print(out);
     }
 
@@ -416,10 +443,15 @@ public class BotUtils {
      * @param trades   list of trades
      */
     public static void printTradesSummary(GetTradesRequest.Category category, List<TradeInfo> trades) {
-        switch (category) {
-            case CLOSED -> new TableBuilder(CLOSED_TRADES_TBL, trades).build().print(out);
-            case FAILED -> new TableBuilder(FAILED_TRADES_TBL, trades).build().print(out);
-            default -> new TableBuilder(OPEN_TRADES_TBL, trades).build().print(out);
+        requireNonNull(trades, "List<TradeInfo> trades param cannot be null.");
+        if (trades.isEmpty()) {
+            log.info("No trades to print.");
+        } else {
+            switch (category) {
+                case CLOSED -> new TableBuilder(CLOSED_TRADES_TBL, trades).build().print(out);
+                case FAILED -> new TableBuilder(FAILED_TRADES_TBL, trades).build().print(out);
+                default -> new TableBuilder(OPEN_TRADES_TBL, trades).build().print(out);
+            }
         }
     }
 
@@ -429,6 +461,7 @@ public class BotUtils {
      * @param paymentAccount the printed PaymentAccount
      */
     public static void printPaymentAccountSummary(PaymentAccount paymentAccount) {
+        requireNonNull(paymentAccount, "PaymentAccount paymentAccount param cannot be null.");
         new TableBuilder(PAYMENT_ACCOUNT_TBL, paymentAccount).build().print(out);
     }
 
@@ -516,6 +549,44 @@ public class BotUtils {
         log.warn("./bisq-cli --password={} --port={} gettrades --category=closed",
                 tradingPeerApiPassword,
                 tradingPeerApiPort);
+        log.warn(BANNER);
+    }
+
+    /**
+     * Log a CLI gettrade command for a simulated trading peer.
+     *
+     * @param log                    calling bot's logger
+     * @param tradingPeerApiPassword trading peer's CLI --password param value
+     * @param tradingPeerApiPort     trading peer's CLI --port param value
+     * @param tradeId                trade's unique identifier (cannot be short-id)
+     */
+    public static void printCliGetTradeCommand(Logger log,
+                                               String tradingPeerApiPassword,
+                                               int tradingPeerApiPort,
+                                               String tradeId) {
+        log.warn(BANNER);
+        log.warn("Trading peer can view a trade with a gettrade CLI command:");
+        log.warn("./bisq-cli --password={} --port={} gettrade --trade-id={}",
+                tradingPeerApiPassword,
+                tradingPeerApiPort,
+                tradeId);
+        log.warn(BANNER);
+    }
+
+    /**
+     * Log 1 or more CLI commands for a simulated trading peer.
+     * Commands need to be separated by newlines to be legible.
+     *
+     * @param log         calling bot's logger
+     * @param description description of CLI commands
+     * @param commands    CLI commands separated by newlines.
+     */
+    public static void printCliCommands(Logger log,
+                                        String description,
+                                        String commands) {
+        log.warn(BANNER);
+        log.warn(description);
+        log.warn(commands);
         log.warn(BANNER);
     }
 

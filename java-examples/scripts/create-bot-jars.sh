@@ -45,6 +45,9 @@ extractdistribution
 ./create-runnable-jar.sh "$GRADLE_DIST_NAME" bisq.bots.TakeBestPricedOfferToBuyBtc
 ./create-runnable-jar.sh "$GRADLE_DIST_NAME" bisq.bots.TakeBestPricedOfferToSellBtc
 
+./create-runnable-jar.sh "$GRADLE_DIST_NAME" bisq.bots.TakeBestPricedOfferToBuyXmr
+./create-runnable-jar.sh "$GRADLE_DIST_NAME" bisq.bots.TakeBestPricedOfferToSellXmr
+
 ./create-runnable-jar.sh "$GRADLE_DIST_NAME" bisq.bots.TakeBestPricedOfferToBuyBsq
 ./create-runnable-jar.sh "$GRADLE_DIST_NAME" bisq.bots.TakeBestPricedOfferToSellBsq
 

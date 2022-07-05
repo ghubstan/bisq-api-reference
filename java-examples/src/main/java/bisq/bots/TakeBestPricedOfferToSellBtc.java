@@ -25,59 +25,64 @@ import protobuf.PaymentAccount;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.BiPredicate;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import static bisq.bots.BotUtils.*;
 import static java.lang.String.format;
-import static java.lang.System.exit;
 import static java.math.RoundingMode.HALF_UP;
-import static protobuf.OfferDirection.BUY;
 import static protobuf.OfferDirection.SELL;
 
 /**
- * The TakeBestPricedOfferToSellBtc bot waits for attractively priced SELL BTC offers to appear, takes the offers
- * (up to a maximum of configured {@link #maxTakeOffers}), then shuts down both the API daemon and itself (the bot),
- * to allow the user to start the desktop UI application and complete the trades.
+ * This bot's general use case is to buy BTC with fiat at a low fiat price.  It periodically checks the
+ * Sell BTC market, and takes a configured maximum number of offers to sell BTC to you according to criteria you
+ * define in the bot's configuration file:  <b>TakeBestPricedOfferToSellBtc.properties</b> (located in project's
+ * src/main/resources directory).  You will need to replace the default values in the configuration file for your
+ * use cases.
+ * <p><br/>
+ * After the maximum number of offers have been taken (good to start with 1), the bot will shut down the API daemon,
+ * then itself.  You have to send fiat payment(s) to the offer maker(s) outside Bisq, then complete the trade(s) in
+ * the <a href="https://bisq.network">Bisq Desktop</a> application.
  * <p>
- * The benefit this bot provides is freeing up the user time spent watching the offer book in the UI, waiting for the
- * right offer to take.  Low-priced offers are taken relatively quickly;  this bot increases the chance of beating
- * the other nodes at taking the offer.
- * <p>
- * The disadvantage is that if the user takes offers with the API, she must complete the trades with the desktop UI.
- * This problem is due to the inability of the API to fully automate every step of the trading protocol.  Sending fiat
- * payments, and confirming their receipt, are manual activities performed outside the Bisq daemon and desktop UI.
- * Also, the API and the desktop UI cannot run at the same time.  Care must be taken to shut down one before starting
- * the other.
- * <p>
- * The criteria for determining which offers to take are defined in the bot's configuration file
- * TakeBestPricedOfferToSellBtc.properties (located in project's src/main/resources directory).  The individual
- * configurations are commented in the existing TakeBestPricedOfferToSellBtc.properties, which should be used as a
- * template for your own use case.
- * <p>
- * One possible use case for this bot is buy BTC with GBP:
+ * Here is one possible use case:
  * <pre>
- *      Take a "Faster Payment (Santander)" offer to sell BTC for GBP at or below current market price if:
- *          the offer maker is a preferred trading peer,
- *          and the offer's BTC amount is between 0.10 and 0.25 BTC,
- *          and the current transaction mining fee rate is below 20 sats / byte.
+ *      Take 4 "Faster Payment" offers to sell BTC for GBP, priced no higher than 1.00% above the current market
+ *      price if:
+ *
+ *          the offer's BTC amount is between 0.10 and 0.25 BTC
+ *          the offer maker is one of two preferred trading peers
+ *          the current transaction mining fee rate is less than or equal 20 sats / byte
+ *
+ *  The bot configurations for these rules are set in TakeBestPricedOfferToSellBtc.properties as follows:
+ *
+ *          maxTakeOffers=4
+ *          minMarketPriceMargin=1.00
+ *          minAmount=0.10
+ *          maxAmount=0.25
+ *          preferredTradingPeers=preferred-address-1.onion:9999,preferred-address-2.onion:9999
+ *          maxTxFeeRate=20
  * </pre>
- * <p>
- * Another possible use case for this bot is to sell BTC for XMR.  (We might say "buy XMR with BTC", but we need to
- * remember that all Bisq offers are for buying or selling BTC.)
+ * <b>Usage</b>
+ * <p><br/>
+ * You must encrypt your wallet password before running this bot.  If it is not already encrypted, you can use the CLI:
  * <pre>
- *      Take an offer to sell BTC for XMR at or below current market price if:
- *          the offer maker is a preferred trading peer,
- *          and the offer's BTC amount is between 0.50 and 1.00 BTC,
- *          and the current transaction mining fee rate is below 15 sats / byte.
+ *     $ ./bisq-cli --password=xyz --port=9998 setwalletpassword --wallet-password="be careful"
  * </pre>
- * <p>
+ * There are some {@link bisq.bots.Config program options} common to all the Java bot examples, passed on the command
+ * line.  The only one you must provide (no default value) is your API daemon's password option:
+ * `--password <String>`.  The bot will prompt you for your wallet-password in the console.
+ * <p><br/>
+ * You can pass the '--dryrun=true' option to the program to see what offers your bot <i>would take</i> with a given
+ * configuration.  This will help you avoid taking offers by mistake.
  * <pre>
- * Usage:  TakeBestPricedOfferToSellBtc  --password=api-password --port=api-port \
- *                          [--conf=take-best-priced-offer-to-sell-btc.conf] \
- *                          [--dryrun=true|false]
- *                          [--simulate-regtest-payment=true|false]
+ *     TakeBestPricedOfferToBuyBtc  --password=api-password --port=api-port [--dryrun=true|false]
  * </pre>
+ * If your API daemon is running on a local regtest network (with a trading peer), you can pass the
+ * '--simulate-regtest-payment=true' option to the program to simulate the full trade protocol.  The bot will print
+ * your regtest trading peer's CLI commands in the console, for you to copy/paste into another terminal.
+ * <pre>
+ *     TakeBestPricedOfferToBuyBtc  --password=api-password --port=api-port [--simulate-regtest-payment=true|false]
+ * </pre>
+ *
+ * @see <a href="https://github.com/bisq-network/bisq-api-reference/blob/make-proto-downloader-runnable-from-any-dir/java-examples/src/main/java/bisq/bots/Config.java">bisq.bots.Config.java</a>
  */
 @Slf4j
 @Getter
@@ -91,21 +96,21 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
     private final String currencyCode;
     // Taker bot's max market price margin.  A takeable offer's price margin (%) must be <= maxMarketPriceMargin (%).
     private final BigDecimal maxMarketPriceMargin;
-    // Taker bot's min BTC amount to buy (or sell in case of XMR).  A takeable offer's amount must be >= minAmount BTC.
+    // Taker bot's min BTC amount to trade.  A takeable offer's amount must be >= minAmount BTC.
     private final BigDecimal minAmount;
-    // Taker bot's max BTC amount to buy (or sell in case of XMR).   A takeable offer's amount must be <= maxAmount BTC.
+    // Taker bot's max BTC amount to trade.  A takeable offer's amount must be <= maxAmount BTC.
     private final BigDecimal maxAmount;
     // Taker bot's max acceptable transaction fee rate.
     private final long maxTxFeeRate;
     // Taker bot's trading fee currency code (BSQ or BTC).
     private final String bisqTradeFeeCurrency;
-    // Maximum # of offers to take during one bot session (shut down bot after N swaps).
+    // Maximum # of offers to take during one bot session (shut down bot after taking N offers).
     private final int maxTakeOffers;
 
     // Offer polling frequency must be > 1000 ms between each getoffers request.
     private final long pollingInterval;
 
-    // The # of BSQ swap offers taken during the bot session (since startup).
+    // The # of offers taken during the bot session (since startup).
     private int numOffersTaken = 0;
 
     public TakeBestPricedOfferToSellBtc(String[] args) {
@@ -145,12 +150,9 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
                 continue;
             }
 
-            // Taker bot's getOffers(direction) request param.  For fiat offers, is SELL (BTC), for XMR offers, is BUY (BTC).
-            String offerDirection = isXmr.test(currencyCode) ? BUY.name() : SELL.name();
-
-            // Get all available and takeable offers, sorted by price ascending.
+            // Get all available and takeable sell BTC offers, sorted by price ascending.
             // The list contains both fixed-price and market price margin based offers.
-            var offers = getOffers(offerDirection, currencyCode).stream()
+            var offers = getOffers(SELL.name(), currencyCode).stream()
                     .filter(o -> !isAlreadyTaken.test(o))
                     .toList();
 
@@ -175,7 +177,6 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
                         takeCriteria.printOfferAgainstCriteria(cheapestOffer);
                     });
 
-            printDryRunProgress();
             runCountdown(log, pollingInterval);
             pingDaemon(startTime);
         }
@@ -189,16 +190,21 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
     private void takeOffer(TakeCriteria takeCriteria, OfferInfo offer) {
         log.info("Will attempt to take offer '{}'.", offer.getId());
         takeCriteria.printOfferAgainstCriteria(offer);
+
+        // An encrypted wallet must be unlocked before calling takeoffer and gettrade(s).
+        // Unlock the wallet for 5 minutes.  If the wallet is already unlocked, this request
+        // will override the timeout of the previous unlock request.
+        try {
+            unlockWallet(walletPassword, 300);
+        } catch (NonFatalException nonFatalException) {
+            handleNonFatalException(nonFatalException, pollingInterval);
+        }
+
         if (isDryRun) {
             addToOffersTaken(offer);
             numOffersTaken++;
-            maybeShutdownAfterSuccessfulTradeCreation();
         } else {
-            // An encrypted wallet must be unlocked before calling takeoffer and gettrade.
-            // Unlock the wallet for 5 minutes.  If the wallet is already unlocked,
-            // this command will override the timeout of the previous unlock command.
             try {
-                unlockWallet(walletPassword, 600);
                 printBTCBalances("BTC Balances Before Take Offer Attempt");
                 // Blocks until new trade is prepared, or times out.
                 takeV1ProtocolOffer(offer, paymentAccount, bisqTradeFeeCurrency, pollingInterval);
@@ -213,79 +219,13 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
                     printBTCBalances("BTC Balances After Simulated Trade Completion");
                 }
                 numOffersTaken++;
-                maybeShutdownAfterSuccessfulTradeCreation();
             } catch (NonFatalException nonFatalException) {
-                handleNonFatalException(nonFatalException);
+                handleNonFatalException(nonFatalException, pollingInterval);
             } catch (StatusRuntimeException fatalException) {
-                handleFatalException(fatalException);
+                shutdownAfterTakeOfferFailure(fatalException);
             }
         }
-    }
-
-    /**
-     * Log the non-fatal exception, and stall the bot if the NonFatalException has a stallTime value > 0.
-     */
-    private void handleNonFatalException(NonFatalException nonFatalException) {
-        log.warn(nonFatalException.getMessage());
-        if (nonFatalException.hasStallTime()) {
-            long stallTime = nonFatalException.getStallTime();
-            log.warn("A minute must pass between the previous and the next takeoffer attempt."
-                            + "  Stalling for {} seconds before the next takeoffer attempt.",
-                    toSeconds.apply(stallTime + pollingInterval));
-            runCountdown(log, stallTime);
-        } else {
-            runCountdown(log, pollingInterval);
-        }
-    }
-
-    /**
-     * Log the fatal exception, and shut down daemon and bot.
-     */
-    private void handleFatalException(StatusRuntimeException fatalException) {
-        log.error("", fatalException);
-        shutdownAfterFailedTradePreparation();
-    }
-
-    /**
-     * Lock the wallet, stop the API daemon, and terminate the bot.
-     */
-    private void maybeShutdownAfterSuccessfulTradeCreation() {
-        if (!isDryRun) {
-            try {
-                lockWallet();
-            } catch (NonFatalException ex) {
-                log.warn(ex.getMessage());
-            }
-        }
-        if (numOffersTaken >= maxTakeOffers) {
-            isShutdown = true;
-
-            if (canSimulatePaymentSteps) {
-                log.info("Shutting down bot after {} successful simulated trades."
-                                + "  API daemon will not be shut down.",
-                        numOffersTaken);
-                sleep(2_000);
-            } else {
-                log.info("Shutting down API daemon and bot after taking {} offers."
-                                + "  Complete the trade(s) with the desktop UI.",
-                        numOffersTaken);
-                sleep(2_000);
-                log.info("Sending stop request to daemon.");
-                stopDaemon();
-            }
-
-            exit(0);
-
-        } else {
-            log.info("You have taken {} offers during this bot session.", numOffersTaken);
-        }
-    }
-
-    /**
-     * Lock the wallet, stop the API daemon, and terminate the bot with a non-zero status (error).
-     */
-    private void shutdownAfterFailedTradePreparation() {
-        shutdownAfterFatalError("Shutting down API daemon and bot after failing to find new trade.");
+        maybeShutdownAfterSuccessfulTradeCreation(numOffersTaken, maxTakeOffers);
     }
 
     /**
@@ -298,18 +238,13 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
                     currentMarketPrice,
                     getMaxMarketPriceMargin());
 
-    /**
-     * Return true if offer.amt >= bot.minAmt AND offer.amt <= bot.maxAmt (within the boundaries).
-     *  TODO API's takeoffer needs to support taking offer's minAmount.
-     */
-    protected final Predicate<OfferInfo> isWithinBTCAmountBounds = (offer) ->
-            BotUtils.isWithinBTCAmountBounds(offer, getMinAmount(), getMaxAmount());
-
     private void printBotConfiguration() {
         var configsByLabel = new LinkedHashMap<String, Object>();
         configsByLabel.put("Bot OS:", getOSName() + " " + getOSVersion());
         var network = getNetwork();
         configsByLabel.put("BTC Network:", network);
+        configsByLabel.put("Dry Run?", isDryRun ? "YES" : "NO");
+        configsByLabel.put("Simulate Regtest Trade?", canSimulatePaymentSteps ? "YES" : "NO");
         configsByLabel.put("My Payment Account:", "");
         configsByLabel.put("\tPayment Account Id:", paymentAccount.getId());
         configsByLabel.put("\tAccount Name:", paymentAccount.getAccountName());
@@ -339,16 +274,11 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
      * performs candidate offer filtering, and provides useful log statements.
      */
     private class TakeCriteria {
+        private static final String MARKET_DESCRIPTION = "Sell BTC";
+
         private final BigDecimal currentMarketPrice;
         @Getter
         private final BigDecimal targetPrice;
-
-        private final Supplier<String> marketDescription = () -> {
-            if (isXmr.test(currencyCode))
-                return "Sell XMR (Buy BTC)";
-            else
-                return "Sell BTC";
-        };
 
         public TakeCriteria() {
             this.currentMarketPrice = getCurrentMarketPrice(currencyCode);
@@ -368,39 +298,39 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
                         .filter(isMakerPreferredTradingPeer)
                         .filter(o -> isMarginLEMaxMarketPriceMargin.test(o, maxMarketPriceMargin)
                                 || isFixedPriceLEMaxMarketPriceMargin.test(o, currentMarketPrice))
-                        .filter(isWithinBTCAmountBounds)
+                        .filter(o -> isWithinBTCAmountBounds(o, getMinAmount(), getMaxAmount()))
                         .findFirst();
             else
                 return offers.stream()
                         .filter(o -> usesSamePaymentMethod.test(o, getPaymentAccount()))
                         .filter(o -> isMarginLEMaxMarketPriceMargin.test(o, maxMarketPriceMargin)
                                 || isFixedPriceLEMaxMarketPriceMargin.test(o, currentMarketPrice))
-                        .filter(isWithinBTCAmountBounds)
+                        .filter(o -> isWithinBTCAmountBounds(o, getMinAmount(), getMaxAmount()))
                         .findFirst();
         }
 
         void printCriteriaSummary() {
             if (isZero.test(maxMarketPriceMargin)) {
-                log.info("Looking for offers to {}, priced at or lower than the current market price {} {}.",
-                        marketDescription.get(),
+                log.info("Looking for offers to {}, priced at or lower than the current market price of {} {}.",
+                        MARKET_DESCRIPTION,
                         currentMarketPrice,
-                        isXmr.test(currencyCode) ? "BTC" : currencyCode);
+                        currencyCode);
             } else {
-                log.info("Looking for offers to {}, priced at or less than {}% {} the current market price {} {}.",
-                        marketDescription.get(),
+                log.info("Looking for offers to {}, priced at or lower than {}% {} the current market price of {} {}.",
+                        MARKET_DESCRIPTION,
                         maxMarketPriceMargin.abs(), // Hide the sign, text explains target price % "above or below".
-                        aboveOrBelowMarketPrice.apply(maxMarketPriceMargin),
+                        aboveOrBelowMaxMarketPriceMargin.apply(maxMarketPriceMargin),
                         currentMarketPrice,
-                        isXmr.test(currencyCode) ? "BTC" : currencyCode);
+                        currencyCode);
             }
         }
 
         void printOffersAgainstCriteria(List<OfferInfo> offers) {
             log.info("Currently available {} offers -- want to take {} offer with price <= {} {}.",
-                    marketDescription.get(),
+                    MARKET_DESCRIPTION,
                     currencyCode,
                     targetPrice,
-                    isXmr.test(currencyCode) ? "BTC" : currencyCode);
+                    currencyCode);
             printOffersSummary(offers);
         }
 
@@ -417,23 +347,22 @@ public class TakeBestPricedOfferToSellBtc extends AbstractBot {
                     iHavePreferredTradingPeers.get()
                             ? isMakerPreferredTradingPeer.test(offer) ? "YES" : "NO"
                             : "N/A");
-            var marginPriceLabel = format("Is offer's price margin (%s%%) <= bot's max market price margin (%s%%)?",
-                    offer.getMarketPriceMarginPct(),
-                    maxMarketPriceMargin);
-            filterResultsByLabel.put(marginPriceLabel,
-                    offer.getUseMarketBasedPrice()
-                            ? isMarginLEMaxMarketPriceMargin.test(offer, maxMarketPriceMargin)
-                            : "N/A");
-            var fixedPriceLabel = format("Is offer's fixed-price (%s) <= bot's target price (%s)?",
-                    offer.getUseMarketBasedPrice() ? "N/A" : offer.getPrice() + " " + currencyCode,
-                    offer.getUseMarketBasedPrice() ? "N/A" : targetPrice + " " + currencyCode);
-            filterResultsByLabel.put(fixedPriceLabel,
-                    offer.getUseMarketBasedPrice()
-                            ? "N/A"
-                            : isFixedPriceLEMaxMarketPriceMargin.test(offer, currentMarketPrice));
+
+            if (offer.getUseMarketBasedPrice()) {
+                var marginPriceLabel = format("Is offer's margin based price (%s) <= bot's target price (%s)?",
+                        offer.getPrice() + " " + currencyCode,
+                        targetPrice + " " + currencyCode);
+                filterResultsByLabel.put(marginPriceLabel, isMarginLEMaxMarketPriceMargin.test(offer, maxMarketPriceMargin));
+            } else {
+                var fixedPriceLabel = format("Is offer's fixed-price (%s) <= bot's target price (%s)?",
+                        offer.getPrice() + " " + currencyCode,
+                        targetPrice + " " + currencyCode);
+                filterResultsByLabel.put(fixedPriceLabel, isFixedPriceLEMaxMarketPriceMargin.test(offer, currentMarketPrice));
+            }
+
             String btcAmountBounds = format("%s BTC - %s BTC", minAmount, maxAmount);
             filterResultsByLabel.put("Is offer's BTC amount within bot amount bounds (" + btcAmountBounds + ")?",
-                    isWithinBTCAmountBounds.test(offer));
+                    isWithinBTCAmountBounds(offer, getMinAmount(), getMaxAmount()));
 
             var title = format("%s offer %s filter results:",
                     offer.getUseMarketBasedPrice() ? "Margin based" : "Fixed price",

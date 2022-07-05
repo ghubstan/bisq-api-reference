@@ -63,9 +63,9 @@ final class GrpcStubs {
     public void close() {
         try {
             if (!channel.isShutdown()) {
-                log.info("Shutting down bot's grpc channel.");
+                log.debug("Shutting down bot's grpc channel.");
                 channel.shutdown().awaitTermination(1, SECONDS);
-                log.info("Bot channel shutdown complete.");
+                log.debug("Bot channel shutdown complete.");
             }
         } catch (InterruptedException ex) {
             throw new IllegalStateException(ex);

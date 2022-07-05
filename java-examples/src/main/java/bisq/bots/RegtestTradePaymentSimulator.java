@@ -24,7 +24,6 @@ import protobuf.PaymentAccount;
 import java.util.Properties;
 
 import static bisq.bots.BotUtils.*;
-import static bisq.proto.grpc.GetTradesRequest.Category.CLOSED;
 import static io.grpc.Status.Code.PERMISSION_DENIED;
 
 /**
@@ -106,18 +105,13 @@ public class RegtestTradePaymentSimulator extends AbstractBot {
         closeTrade(tradeId);
         log.info("You closed the trade here in the bot (mandatory, to move trades to history list).");
 
-        log.warn("##############################################################################");
-        log.warn("Bob closes trade in the CLI (mandatory, to move trades to history list):");
-        String copyPasteCliCommands = "./bisq-cli --password=xyz --port=9999 closetrade --trade-id=" + trade.getTradeId()
+        String cliCommandDescription = "Trading peer inspects and closes trade in the CLI (mandatory, to move trades to history list):";
+        String copyPasteCliCommands = "./bisq-cli --password=xyz --port=9999 gettrade --trade-id=" + trade.getTradeId()
+                + "\n" + "./bisq-cli --password=xyz --port=9999 closetrade --trade-id=" + trade.getTradeId()
                 + "\n" + "./bisq-cli --password=xyz --port=9999 gettrades --category=closed";
-        log.warn(copyPasteCliCommands);
-        log.warn("##############################################################################");
+        printCliCommands(log, cliCommandDescription, copyPasteCliCommands);
 
-        sleep(pollingInterval);
-        log.info("Trade is completed.  Here are today's completed trades:");
-        printTradesSummaryForToday(CLOSED);
-
-        log.info("Closing {}'s gRPC channel.", this.getClass().getSimpleName());
+        log.debug("Closing {}'s gRPC channel.", this.getClass().getSimpleName());
         super.grpcStubs.close();
     }
 

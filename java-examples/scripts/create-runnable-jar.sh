@@ -84,15 +84,15 @@ MAINCLASS_FILE_PATH=$(getmainclassfilepath "$FULLY_QUALIFIED_CLASSNAME")
 
 # Extract the Main-Class from the distribution jar, to the current working directory.
 jar xfv "lib/$GRADLE_DIST_NAME.jar" "$MAINCLASS_FILE_PATH" "$SIMPLE_CLASSNAME.properties"
-echo "Extracted one class:"
-ls -l bisq/bots/pazza
+echo "Extracted $SIMPLE_CLASSNAME.class:"
+ls -l "bisq/bots/$SIMPLE_CLASSNAME.class"
 mv "$SIMPLE_CLASSNAME.properties" "$JAR_BASENAME.conf"
-echo "Extracted one properties file and renamed it $JAR_BASENAME.conf"
-ls -l *.conf
+echo "Extracted $SIMPLE_CLASSNAME.properties and renamed it $JAR_BASENAME.conf"
+ls -l "$JAR_BASENAME.conf"
 
 # Now it can be added to the empty jar with the correct path.
 jar uf "$JAR_BASENAME.jar" "$MAINCLASS_FILE_PATH"
-# Remove bisq (bisq/bots/junk).
+# Remove workarea.
 rm -rf bisq
 
 echo "Runnable $JAR_BASENAME.jar is ready to use."
