@@ -185,7 +185,7 @@ Take special care to not run the Bisq API daemon and the desktop application at 
 **Use Cases, Usage and Configuration**
 
 This information is found in
-the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToBuyBtc.java)
+the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/main/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToBuyBtc.java)
 .
 
 **Creating And Using Runnable TakeBestPricedOfferToBuyBtc Jar**
@@ -221,7 +221,7 @@ Take special care to not run the Bisq API daemon and the desktop application at 
 **Use Cases, Usage and Configuration**
 
 This information is found in
-the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToSellBtc.java)
+the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/main/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToSellBtc.java)
 .
 
 **Creating And Using Runnable TakeBestPricedOfferToSellBtc Jar**
@@ -251,7 +251,7 @@ Take special care to not run the Bisq API daemon and the desktop application at 
 **Use Cases, Usage and Configuration**
 
 This information is found in
-the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToBuyBsq.java)
+the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/main/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToBuyBsq.java)
 .
 
 **Creating And Using Runnable TakeBestPricedOfferToBuyBsq Jar**
@@ -281,7 +281,7 @@ Take special care to not run the Bisq API daemon and the desktop application at 
 **Use Cases, Usage and Configuration**
 
 This information is found in
-the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToSellBsq.java)
+the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/main/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToSellBsq.java)
 .
 
 **Creating And Using Runnable TakeBestPricedOfferToSellBsq Jar**
@@ -311,7 +311,7 @@ Take special care to not run the Bisq API daemon and the desktop application at 
 **Use Cases, Usage and Configuration**
 
 This information is found in
-the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToBuyXmr.java)
+the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/main/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToBuyXmr.java)
 .
 
 **Creating And Using Runnable TakeBestPricedOfferToBuyXmr Jar**
@@ -341,7 +341,7 @@ Take special care to not run the Bisq API daemon and the desktop application at 
 **Use Cases, Usage and Configuration**
 
 This information is found in
-the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/split-up-take-btc-offer-bots/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToSellXmr.java)
+the [source code's Java class level documentation](https://github.com/bisq-network/bisq-api-reference/blob/main/java-examples/src/main/java/bisq/bots/TakeBestPricedOfferToSellXmr.java)
 .
 
 **Creating And Using Runnable TakeBestPricedOfferToSellXmr Jar**
