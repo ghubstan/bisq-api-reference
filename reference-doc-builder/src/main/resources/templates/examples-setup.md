@@ -21,13 +21,13 @@ document.
 
 The only requirements are:
 
-- A running, local API daemon, preferably the test harness described in
+- A running API daemon, preferably the test harness described in
   the [Bisq API Beta Testing Guide](https://github.com/bisq-network/bisq/blob/master/apitest/docs/api-beta-test-guide.md)
 - A terminal open in the Bisq source project's root directory
 
-## Java Examples
+## Java API RPC Examples
 
-Running Java examples requires:
+Running Java RPC request examples requires:
 
 - A running, local API daemon, preferably the test harness described in
   the [Bisq API Beta Testing Guide](https://github.com/bisq-network/bisq/blob/master/apitest/docs/api-beta-test-guide.md)
@@ -55,11 +55,18 @@ run `protoc` with the appropriate options:
 _Note:  My attempts to compile the protoc gen-java plugin on my own platform were unsuccessful. You may have better luck
 or time to resolve platform specific build issues._
 
-## Python Examples
+## Java API Bots
+
+There are some simple, mainnet-ready [bots](https://github.com/bisq-network/bisq-api-reference/tree/main/java-examples/src/main/java/bisq/bots)
+in the project. The requirements are the same as for the RPC request examples.  
+See the [Java API Bots README](https://github.com/bisq-network/bisq-api-reference/blob/main/java-examples/README.md#java-api-bots) 
+for details.
+
+## Python API RPC Examples
 
 Running Python examples requires:
 
-- A running, local API daemon, preferably the test harness described in
+- A running API daemon, preferably the test harness described in
   the [Bisq API Beta Testing Guide](https://github.com/bisq-network/bisq/blob/master/apitest/docs/api-beta-test-guide.md)
 - Downloading Bisq protobuf definition files
 - Generating protobuf and gRPC service stubs using the `protoc` compiler, with two additional Python protobuf and grpc
@@ -67,8 +74,24 @@ Running Python examples requires:
 
 You can download the Bisq protobuf (.proto) files by running:
 
-    `proto-downloader/download-bisq-protos.sh`
+```asciidoc
+$ proto-downloader/download-bisq-protos.sh
+```
 
 You can build Python .proto stubs, install Python example dependencies, and package the examples by running:
 
-    `python-examples/run-setup.sh`
+```asciidoc
+$ python-examples/run-setup.sh
+```
+
+## Python API Bots
+
+There are some simple, _not-ready-for-mainnet_ [Python bots](https://github.com/bisq-network/bisq-api-reference/tree/main/python-examples/bisq/bots)
+in the project.  They do not properly handle errors as the [Java bots](https://github.com/bisq-network/bisq-api-reference/blob/main/java-examples/README.md#java-api-bots)
+do.  
+
+These might give a more experienced Python developer a starting point for writing their own Python API
+bots, but the Python dev should refer to the [Java bot](https://github.com/bisq-network/bisq-api-reference/blob/main/java-examples/README.md#java-api-bots) 
+examples for safer error handling.
+
+The requirements are the same as for the Python RPC request examples. 
