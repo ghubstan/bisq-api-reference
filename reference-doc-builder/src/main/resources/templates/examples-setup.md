@@ -35,24 +35,12 @@ Running Java examples requires:
 - Generating protobuf and gRPC service stubs using the the [protoc](https://grpc.io/docs/protoc-installation/) compiler,
   with the [protoc-gen-grpc-java](https://github.com/grpc/grpc-java) plugin.
 
-### Download the Bisq .proto files to your Java project
+### Download Bisq .proto files and generate API's gPRC service stubs
 
-If your Java source is located in a directory named  `my-api-app/src/main`, open a terminal in your project root
-directory (`my-api-app`), and the Bisq .proto files are located in a directory named `my-api-app/src/main/proto`:
+See [Generating Protobuf Code](https://github.com/bisq-network/bisq-api-reference/blob/main/java-examples/README.md#generating-protobuf-code)
+in the java-examples README.
 
-    `$ export PROTO_PATH="src/main/proto"`</br>
-    `$ curl -o $PROTO_PATH/pb.proto https://raw.githubusercontent.com/bisq-network/bisq/master/proto/src/main/proto/pb.proto`</br>
-    `$ curl -o $PROTO_PATH/grpc.proto https://raw.githubusercontent.com/bisq-network/bisq/master/proto/src/main/proto/grpc.proto`
-
-### Generate Bisq API protobuf stubs using Gradle grpc-java plugin (recommended)
-
-You can generate Java API stubs in a Gradle project using the [protoc-gen-grpc-java](https://github.com/grpc/grpc-java)
-plugin. Try the [build.gradle](https://github.com/bisq-network/bisq-api-reference/blob/main/java-examples/build.gradle)
-file used by the project providing the Java examples for this document; it should work for you.
-
-_Note: You can also generate stubs with [protoc-gen-grpc-java](https://github.com/grpc/grpc-java) in maven projects._
-
-### Generate Bisq API protobuf stubs using grpc-java plugin from terminal
+### Do it yourself:  manually generate Bisq API protobuf stubs with protoc compiler and grpc-java plugin
 
 If you prefer to generate the Java protos from a terminal, you can compile
 the [protoc gen-java](https://github.com/grpc/grpc-java/blob/master/COMPILING.md) binary from source, or manually
