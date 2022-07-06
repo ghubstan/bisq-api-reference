@@ -1,10 +1,14 @@
 # Running Example Code
 
-Examples should not be used to make calls to an API daemon connected to the bitcoin mainnet. There is a convenient way
-to run a regtest bitcoin-core daemon, a Bisq seed node, an arbitration node, and two regtest API daemons called Alice (
-listening on port 9998), and Bob (listening on port 9999). The Bob and Alice daemons will have regtest wallets
-containing 10 BTC. Bob's BSQ wallet will also be set up with 1500000 BSQ, Alice's with 1000000 BSQ. These two API
-daemons can simulate trading over the local regtest network.
+Be careful about running any example that could affect your mainnet wallet.  You might want to send `sendbsq`, 
+`sendbtc`, `createoffer`, and `takeoffer` requests to an API daemon connected to a local regtest network before trying 
+them on mainnet.
+
+There is a convenient way to run a regtest bitcoin-core daemon, a Bisq seed node, an arbitration node, and two regtest 
+API daemons called Alice (listening on port 9998), and Bob (listening on port 9999). The Bob and Alice daemons will 
+have regtest wallets containing 10 BTC. Bob's BSQ wallet will also be set up with 1500000 BSQ, Alice's with 1000000 BSQ. 
+These two API daemons can simulate trading over the local regtest network.  Running a local, Bisq regtest network is 
+useful if you want to develop your own API bots.
 
 See
 the [Bisq API Beta Testing Guide](https://github.com/bisq-network/bisq/blob/master/apitest/docs/api-beta-test-guide.md)
