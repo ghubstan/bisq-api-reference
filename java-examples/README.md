@@ -51,8 +51,6 @@ market use cases.
 The protobuf IDL files are not part of this project, and must be downloaded from the Bisq repository's
 [protobuf file directory](https://github.com/bisq-network/bisq/tree/master/proto/src/main/proto).
 
-TODO @ripcurlx, please review https://github.com/ghubstan/bisq-api-reference/pull/11
-
 You can download them by running
 [this script](https://github.com/bisq-network/bisq-api-reference/blob/main/proto-downloader/download-bisq-protos.sh)
 from your IDE or a shell:
