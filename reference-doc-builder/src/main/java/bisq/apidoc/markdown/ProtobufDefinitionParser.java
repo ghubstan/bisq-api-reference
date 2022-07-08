@@ -410,6 +410,12 @@ public class ProtobufDefinitionParser {
                 .build();
         mdBlocks.add(introBlock);
 
+        Template warningsTemplate = new Template("warnings.md");
+        Block warningsBlock = StringBlock.builder()
+                .content(warningsTemplate.getContent())
+                .build();
+        mdBlocks.add(warningsBlock);
+
         Template examplesSetupTemplate = new Template("examples-setup.md");
         Block examplesSetupBlock = StringBlock.builder()
                 .content(examplesSetupTemplate.getContent())
