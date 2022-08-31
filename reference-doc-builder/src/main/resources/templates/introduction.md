@@ -1,6 +1,7 @@
 # Introduction
 
-Welcome to the Bisq gRPC API reference documentation for Bisq Daemon.
+Welcome to the Bisq gRPC API reference documentation for Bisq
+Daemon ([master branch](https://github.com/bisq-network/bisq/tree/master)).
 
 You can use this API to access local Bisq daemon API endpoints, which provide a subset of the Bisq Desktop application's
 feature set:  check balances, transfer BTC and BSQ, create payment accounts, view offers, create and take offers, and
