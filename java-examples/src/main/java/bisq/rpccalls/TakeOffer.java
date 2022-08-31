@@ -28,7 +28,8 @@ public class TakeOffer extends BaseJavaExample {
             var offerCategory = offersStub.getOfferCategory(getOfferCategoryRequest);
             // Create a takeoffer request builder with just the offerId parameter.
             var takeOfferRequestBuilder = TakeOfferRequest.newBuilder()
-                    .setOfferId("83e8b2e2-51b6-4f39-a748-3ebd29c22aea");
+                    .setOfferId("83e8b2e2-51b6-4f39-a748-3ebd29c22aea")
+                    .setAmount(1_000_000L);  // 1 million satoshis = 0.01 BTC
             //  If offer is not a BSQ swap offer, add the paymentAccountId and takerFeeCurrencyCode parameters.
             if (!offerCategory.equals(BSQ_SWAP))
                 takeOfferRequestBuilder
